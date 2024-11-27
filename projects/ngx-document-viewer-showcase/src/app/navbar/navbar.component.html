@@ -1,0 +1,56 @@
+<div class="content">
+  <!-- Top Menubar -->
+  <p-toolbar>
+    <ng-template #center>
+      <ng-content select=".title"></ng-content>
+    </ng-template>
+  </p-toolbar>
+
+  <!-- Main content -->
+  <div class="main-container">
+    <ng-content select="lib-document-viewer"></ng-content>
+    <!-- <ng-content></ng-content> -->
+  </div>
+  <!-- Right Sidebar -->
+  <div class="sidebar">
+    <div class="fixedSidebar fixedSidebarRight">
+      @for(icon of rightNavbarIcons; track icon.iconName){
+      <span class="sidebarItem">
+        <i
+          [class]="icon.iconName"
+          (click)="handleIconClick(icon)"
+          style="color: var(--p-primary-color); font-size: 1.3rem"
+        ></i>
+      </span>
+      }
+    </div>
+  </div>
+
+  <!-- Left Sidebar -->
+  <div class="sidebar">
+    <div class="fixedSidebar fixedSidebarLeft">
+      @for(icon of leftNavbarIcons; track icon.iconName){
+      <span class="sidebarItem">
+        <i
+          [class]="icon.iconName"
+          style="color: var(--p-primary-color); font-size: 1.3rem"
+        ></i>
+      </span>
+      }
+    </div>
+  </div>
+
+  <!-- Bottom Sidebar -->
+  <div class="sidebar">
+    <div class="fixedSidebar fixedSidebarBottom">
+      @for(icon of bottomNavbarIcons; track icon.iconName){
+      <span class="sidebarItem">
+        <i
+          [class]="icon.iconName"
+          style="color: var(--p-primary-color); font-size: 1.3rem"
+        ></i>
+      </span>
+      }
+    </div>
+  </div>
+</div>

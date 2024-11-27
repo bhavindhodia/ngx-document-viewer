@@ -1,0 +1,29 @@
+<!-- <div class="document-viewer">
+  <div class="toolbar">
+    <div class="file-info">
+      <span class="file-name">{{ fileName }}</span>
+      <div class="toolbar-buttons">
+        <button class="save-btn" (click)="saveDocument()">
+          <svg-icon src="/icons/search.svg" [svgStyle]="{ 'width.px':20,'height.px':20 }"></svg-icon>
+        </button>
+        <button class="download-btn" (click)="downloadDocument()">Download</button>
+        <button class="download-btn" (click)="loadDocument()">Load Document</button>
+      </div>
+    </div>
+    <div class="toolbar-actions">
+      <button class="selection-btn" (click)="toggleSelection()">Pointer</button>
+      <button class="line-btn" (click)="drawLine()"><i class="fas fa-draw-polygon"></i></button>
+      <input type="text" class="text-box" (input)="addText()" placeholder="Enter text">
+    </div>
+  </div>
+  <div class="document-content">
+      <lib-document-viewer></lib-document-viewer>
+  </div>
+  <div class="toolbar-bottom">
+    <button class="rotate-left-btn" (click)="rotateLeft()">Left</button>
+    <button class="rotate-right-btn" (click)="rotateRight()">Right</button>
+  </div>
+</div>
+ -->
+<p-toast />
+<app-document-viewer></app-document-viewer>

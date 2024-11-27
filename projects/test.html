@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Side Navbar</title>
+    <style>
+  html {
+	 scroll-behavior: smooth;
+	 box-sizing: border-box;
+}
+ *, *:after, *:before {
+	 box-sizing: border-box;
+}
+ body {
+	 font-family: 'Noto Sans', sans-serif;
+	 overflow-x: hidden;
+}
+ body::-webkit-scrollbar-track {
+	 -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.1);
+	 background-color: #f7f7f7;
+	 border-radius: 10px;
+}
+ body::-webkit-scrollbar {
+	 width: 3px;
+	 background-color: #f7f7f7;
+}
+ body::-webkit-scrollbar-thumb {
+	 border-radius: 10px;
+	 background-color: #fff;
+	 background-image: -webkit-gradient(linear, 40% 0%, 75% 84%, from(#d70018), to(#d70018), color-stop(0.6, #d70018));
+}
+ .content {
+	 display: flex;
+	 align-items: center;
+	 justify-content: center;
+	 flex-flow: column;
+	 padding: 0 30px;
+}
+ .content h1 {
+	 margin-top: 60px;
+	 text-align: center;
+}
+ .content p {
+	 margin: 0 auto 15px;
+	 width: 700px;
+	 line-height: 1.8;
+	 text-align: center;
+}
+ @media (max-width: 767px) {
+	 .content p {
+		 width: 100%;
+	}
+}
+ .content pre {
+	 padding: 15px;
+	 margin-top: 0;
+	 margin-bottom: 45px;
+	 border-radius: 5px;
+	 text-align: center;
+	 text-wrap: wrap;
+	 line-height: 1.6;
+	 color: #000;
+	 background-color: #f7f7f7;
+	 overflow-x: auto;
+}
+ .contentDemo:empty {
+	 margin: auto;
+	 width: 500px;
+	 height: 600px;
+	/* change height to see repeat-y behavior */
+	 background-image: radial-gradient(circle 50px at 50px 50px, lightgray 99%, transparent 0), linear-gradient(100deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.5) 50%, rgba(255, 255, 255, 0) 80%), linear-gradient(lightgray 20px, transparent 0), linear-gradient(lightgray 20px, transparent 0), linear-gradient(lightgray 20px, transparent 0), linear-gradient(lightgray 20px, transparent 0);
+	 background-repeat: repeat-y;
+	 background-size: 100px 200px, 50px 200px, 150px 200px, 350px 200px, 300px 200px, 250px 200px;
+	/* circle */
+	/* highlight */
+	 background-position: 0 0, 0 0, 120px 0, 120px 40px, 120px 80px, 120px 120px;
+	/* circle */
+	/* highlight */
+}
+ .fixedSidebar {
+	 position: fixed;
+	 z-index: 99;
+	 background-color: #d70018;
+}
+ .fixedSidebar.active .sidebarItem {
+	 transform: scale(0);
+	 margin: 0;
+	 width: 0;
+	 height: 0;
+}
+ .fixedSidebar [data-tooltip] {
+	 position: relative;
+	 z-index: 9;
+}
+ .fixedSidebar [data-tooltip]::before {
+	 position: absolute;
+	 content: attr(data-tooltip);
+	 display: block;
+	 padding: 7px;
+	 color: #fff;
+	 text-align: center;
+	 font-size: 0.8em;
+	 white-space: nowrap;
+	 border-radius: 4px;
+	 background: #d70018;
+	 opacity: 0;
+	 visibility: hidden;
+	 cursor: default;
+	 pointer-events: none;
+	 transition: all 0.2s ease-in-out;
+}
+ .fixedSidebar [data-tooltip]:hover::before {
+	 opacity: 1;
+	 visibility: visible;
+}
+ .fixedSidebar .sidebarItem {
+	 position: relative;
+	 z-index: 10;
+	 display: inline-block;
+	 margin: 10px 0;
+	 width: 24px;
+	 height: 24px;
+	 border-radius: 30px;
+	 transition: 0.25s;
+}
+ .fixedSidebar .sidebarItem svg {
+	 fill: #fff;
+}
+ .fixedSidebar.fixedSidebarRight {
+	 top: 50%;
+	 right: 0;
+	 transform: translateY(-50%);
+	 display: flex;
+	 flex-direction: column;
+	 justify-content: center;
+	 align-items: center;
+	 padding: 20px 15px;
+	 border-top-left-radius: 30px;
+	 border-bottom-left-radius: 30px;
+}
+ .fixedSidebar.fixedSidebarRight:before, .fixedSidebar.fixedSidebarRight:after {
+	 content: "";
+	 pointer-events: none;
+	 position: absolute;
+	 height: 30px;
+	 width: 60px;
+	 right: 0px;
+}
+ .fixedSidebar.fixedSidebarRight:before {
+	 top: -30px;
+	 border-radius: 0 0 50px 0;
+	 box-shadow: 30px 1px 0 0 #d70018;
+}
+ .fixedSidebar.fixedSidebarRight:after {
+	 bottom: -30px;
+	 border-radius: 0 50px 0px 0;
+	 box-shadow: 30px -1px 0 0 #d70018;
+}
+ .fixedSidebar.fixedSidebarRight .buttonTrigger svg {
+	 transform: rotate(180deg);
+	 transition: 0.25s;
+}
+ .fixedSidebar.fixedSidebarRight .buttonTrigger.active {
+	 transform: scale(1) !important;
+	 width: 24px !important;
+	 height: 24px !important;
+}
+ .fixedSidebar.fixedSidebarRight .buttonTrigger.active svg {
+	 transform: rotate(0);
+}
+ .fixedSidebar.fixedSidebarRight [data-tooltip]::before {
+	 top: 50%;
+	 right: 100%;
+	 transform: translateY(-50%);
+}
+ .fixedSidebar.fixedSidebarRight [data-tooltip]:hover::before {
+	 right: 50px;
+}
+ .fixedSidebar.fixedSidebarLeft {
+	 top: 50%;
+	 left: 0;
+	 transform: translateY(-50%);
+	 display: flex;
+	 flex-direction: column;
+	 justify-content: center;
+	 align-items: center;
+	 padding: 20px 15px;
+	 border-top-right-radius: 30px;
+	 border-bottom-right-radius: 30px;
+}
+ .fixedSidebar.fixedSidebarLeft:before, .fixedSidebar.fixedSidebarLeft:after {
+	 content: "";
+	 pointer-events: none;
+	 position: absolute;
+	 height: 30px;
+	 width: 60px;
+	 left: 0px;
+}
+ .fixedSidebar.fixedSidebarLeft:before {
+	 top: 0;
+	 border-radius: 0 0 50px 0;
+	 box-shadow: 30px 1px 0 0 #d70018;
+	 transform: rotate(90deg) translateY(50%) translateX(-75%);
+}
+ .fixedSidebar.fixedSidebarLeft:after {
+	 bottom: 0;
+	 border-radius: 0 50px 0px 0;
+	 box-shadow: 30px -1px 0 0 #d70018;
+	 transform: rotate(-0.25turn) translateX(-75%) translateY(-50%);
+}
+ .fixedSidebar.fixedSidebarLeft .buttonTrigger svg {
+	 transform: rotate(0deg);
+	 transition: 0.25s;
+}
+ .fixedSidebar.fixedSidebarLeft .buttonTrigger.active {
+	 transform: scale(1) !important;
+	 width: 24px !important;
+	 height: 24px !important;
+}
+ .fixedSidebar.fixedSidebarLeft .buttonTrigger.active svg {
+	 transform: rotate(180deg);
+}
+ .fixedSidebar.fixedSidebarLeft [data-tooltip]::before {
+	 top: 50%;
+	 left: 100%;
+	 transform: translateY(-50%);
+}
+ .fixedSidebar.fixedSidebarLeft [data-tooltip]:hover::before {
+	 left: 50px;
+}
+ .fixedSidebar.fixedSidebarBottom {
+	 right: 50%;
+	 top: auto;
+	 bottom: 0;
+	 display: flex;
+	 flex-direction: row;
+	 justify-content: center;
+	 align-items: center;
+	 padding: 15px 20px;
+	 border-top-left-radius: 30px;
+	 border-top-right-radius: 30px;
+	 transform: translateX(50%) translateY(0);
+}
+ .fixedSidebar.fixedSidebarBottom:before, .fixedSidebar.fixedSidebarBottom:after {
+	 content: "";
+	 pointer-events: none;
+	 position: absolute;
+	 height: 30px;
+	 width: 60px;
+}
+ .fixedSidebar.fixedSidebarBottom:before {
+	 bottom: 0;
+	 left: 0;
+	 border-radius: 0 0 50px 0;
+	 box-shadow: 30px 1px 0 0 #d70018;
+	 transform: rotate(0deg) translateY(0) translateX(-100%);
+}
+ .fixedSidebar.fixedSidebarBottom:after {
+	 bottom: 0;
+	 right: 0;
+	 border-radius: 0 50px 0px 0;
+	 box-shadow: 30px -1px 0 0 #d70018;
+	 transform: rotate(180deg) translateX(-100%) translateY(0%);
+}
+ .fixedSidebar.fixedSidebarBottom .sidebarItem {
+	 margin: 0 15px;
+}
+ .fixedSidebar.fixedSidebarBottom.active .sidebarItem {
+	 margin: 0;
+}
+ .fixedSidebar.fixedSidebarBottom .buttonTrigger svg {
+	 transform: rotate(45deg);
+	 transition: 0.25s;
+}
+ .fixedSidebar.fixedSidebarBottom .buttonTrigger.active {
+	 transform: scale(1) !important;
+	 width: 24px !important;
+	 height: 24px !important;
+}
+ .fixedSidebar.fixedSidebarBottom .buttonTrigger.active svg {
+	 transform: rotate(0deg);
+}
+ .fixedSidebar.fixedSidebarBottom [data-tooltip]::before {
+	 top: -30px;
+	 right: 50%;
+	 transform: translateX(50%) translateY(0);
+}
+ .fixedSidebar.fixedSidebarBottom [data-tooltip]:hover::before {
+	 top: -60px;
+}
+
+    </style>
+</head>
+<body>
+   <div class="content">
+  <h1>Floating Social Bar With Hidden Button</h1>
+  <p>
+    An easy-to-use yet fully configurable floating (sticky) social share bar that can be placed either on the left, on the right side or on the center of the screen.
+  </p>
+  <p>
+    Add the data-tooltip attribute to the element you want the tooltip in. The value of that attribute will be the text shown by the tooltip.
+  </p>
+  <pre>&lt;a href=&quot;#&quot; data-tooltip=&quot;Lorem ipsum dolor sit amet...&quot;&gt;tooltip&lt;/a&gt;</pre>
+  <div class="contentDemo"></div>
+</div>
+
+<!-- Sidebar -->
+<div class="sidebar">
+  <div class="fixedSidebar fixedSidebarRight">
+  <a href="" class="sidebarItem" data-tooltip="Hotline">
+    <svg version="1.1" id="fi_725606" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 480 480" style="enable-background:new 0 0 480 480;" xml:space="preserve">
+      <g>
+        <g>
+          <path d="M256,128c-8.832,0-16,7.168-16,16c0,8.832,7.168,16,16,16c35.296,0,64,28.704,64,64c0,8.832,7.168,16,16,16
+			c8.832,0,16-7.168,16-16C352,171.072,308.928,128,256,128z"></path>
+        </g>
+      </g>
+      <g>
+        <g>
+          <path d="M256,64c-8.832,0-16,7.168-16,16c0,8.832,7.168,16,16,16c70.592,0,128,57.408,128,128c0,8.832,7.168,16,16,16
+			c8.832,0,16-7.168,16-16C416,135.776,344.224,64,256,64z"></path>
+        </g>
+      </g>
+      <g>
+        <g>
+          <path d="M256,0c-8.832,0-16,7.168-16,16c0,8.832,7.168,16,16,16c105.888,0,192,86.112,192,192c0,8.832,7.168,16,16,16
+			c8.832,0,16-7.168,16-16C480,100.48,379.488,0,256,0z"></path>
+        </g>
+      </g>
+      <g>
+        <g>
+          <path d="M432,352c-46.464,0-90.72-10.112-131.52-30.048c-3.84-1.92-8.256-2.144-12.256-0.736c-4.032,1.408-7.328,4.352-9.184,8.16
+			l-25.152,52.064C188.8,345.12,134.912,291.264,98.624,226.176l52.032-25.216c3.84-1.856,6.752-5.152,8.16-9.184
+			c1.376-4,1.12-8.416-0.768-12.256C138.112,138.72,128,94.464,128,48c0-8.832-7.168-16-16-16H16C7.168,32,0,39.168,0,48
+			c0,238.208,193.792,432,432,432c8.832,0,16-7.168,16-16v-96C448,359.168,440.832,352,432,352z"></path>
+        </g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+    </svg>
+  </a>
+  <a href="" class="sidebarItem" data-tooltip="Messenger">
+    <svg id="fi_2111399" enable-background="new 0 0 24 24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path d="m0 11.111c0 3.496 1.744 6.615 4.471 8.652v4.237l4.086-2.242c1.09.301 2.245.465 3.442.465 6.627 0 12-4.974 12-11.111.001-6.137-5.372-11.112-11.999-11.112s-12 4.974-12 11.111zm10.734-3.112 3.13 3.259 5.887-3.259-6.56 6.962-3.055-3.258-5.963 3.259z"></path>
+    </svg>
+  </a>
+  <a href="" class="sidebarItem" data-tooltip="Instagram">
+    <svg id="fi_2111491" enable-background="new 0 0 24 24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path d="m12.004 5.838c-3.403 0-6.158 2.758-6.158 6.158 0 3.403 2.758 6.158 6.158 6.158 3.403 0 6.158-2.758 6.158-6.158 0-3.403-2.758-6.158-6.158-6.158zm0 10.155c-2.209 0-3.997-1.789-3.997-3.997s1.789-3.997 3.997-3.997 3.997 1.789 3.997 3.997c.001 2.208-1.788 3.997-3.997 3.997z"></path>
+      <path d="m16.948.076c-2.208-.103-7.677-.098-9.887 0-1.942.091-3.655.56-5.036 1.941-2.308 2.308-2.013 5.418-2.013 9.979 0 4.668-.26 7.706 2.013 9.979 2.317 2.316 5.472 2.013 9.979 2.013 4.624 0 6.22.003 7.855-.63 2.223-.863 3.901-2.85 4.065-6.419.104-2.209.098-7.677 0-9.887-.198-4.213-2.459-6.768-6.976-6.976zm3.495 20.372c-1.513 1.513-3.612 1.378-8.468 1.378-5 0-7.005.074-8.468-1.393-1.685-1.677-1.38-4.37-1.38-8.453 0-5.525-.567-9.504 4.978-9.788 1.274-.045 1.649-.06 4.856-.06l.045.03c5.329 0 9.51-.558 9.761 4.986.057 1.265.07 1.645.07 4.847-.001 4.942.093 6.959-1.394 8.453z"></path>
+      <circle cx="18.406" cy="5.595" r="1.439"></circle>
+    </svg>
+  </a>
+  <a href="" class="sidebarItem" data-tooltip="Telegram">
+    <svg id="fi_2111708" enable-background="new 0 0 24 24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path d="m9.417 15.181-.397 5.584c.568 0 .814-.244 1.109-.537l2.663-2.545 5.518 4.041c1.012.564 1.725.267 1.998-.931l3.622-16.972.001-.001c.321-1.496-.541-2.081-1.527-1.714l-21.29 8.151c-1.453.564-1.431 1.374-.247 1.741l5.443 1.693 12.643-7.911c.595-.394 1.136-.176.691.218z"></path>
+    </svg>
+  </a>
+  <a href="" class="sidebarItem buttonTrigger">
+    <svg version="1.1" id="fi_626033" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 490.651 490.651" style="enable-background:new 0 0 490.651 490.651;" xml:space="preserve">
+      <g>
+        <g>
+          <path d="M370.211,472.453L143.053,245.317L370.189,18.203c4.16-4.16,4.16-10.923,0-15.083c-4.16-4.16-10.923-4.16-15.083,0
+			L120.44,237.787c-4.16,4.16-4.16,10.923,0,15.083l234.667,234.667c2.091,2.091,4.821,3.115,7.552,3.115s5.461-1.045,7.552-3.115
+			C374.371,483.376,374.371,476.613,370.211,472.453z"></path>
+        </g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+    </svg>
+  </a>
+</div>
+</div>
+
+<!-- Sidebar -->
+<div class="sidebar">
+  <div class="fixedSidebar fixedSidebarLeft">
+  <a href="" class="sidebarItem" data-tooltip="Hotline">
+    <svg version="1.1" id="fi_725606" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 480 480" style="enable-background:new 0 0 480 480;" xml:space="preserve">
+      <g>
+        <g>
+          <path d="M256,128c-8.832,0-16,7.168-16,16c0,8.832,7.168,16,16,16c35.296,0,64,28.704,64,64c0,8.832,7.168,16,16,16
+			c8.832,0,16-7.168,16-16C352,171.072,308.928,128,256,128z"></path>
+        </g>
+      </g>
+      <g>
+        <g>
+          <path d="M256,64c-8.832,0-16,7.168-16,16c0,8.832,7.168,16,16,16c70.592,0,128,57.408,128,128c0,8.832,7.168,16,16,16
+			c8.832,0,16-7.168,16-16C416,135.776,344.224,64,256,64z"></path>
+        </g>
+      </g>
+      <g>
+        <g>
+          <path d="M256,0c-8.832,0-16,7.168-16,16c0,8.832,7.168,16,16,16c105.888,0,192,86.112,192,192c0,8.832,7.168,16,16,16
+			c8.832,0,16-7.168,16-16C480,100.48,379.488,0,256,0z"></path>
+        </g>
+      </g>
+      <g>
+        <g>
+          <path d="M432,352c-46.464,0-90.72-10.112-131.52-30.048c-3.84-1.92-8.256-2.144-12.256-0.736c-4.032,1.408-7.328,4.352-9.184,8.16
+			l-25.152,52.064C188.8,345.12,134.912,291.264,98.624,226.176l52.032-25.216c3.84-1.856,6.752-5.152,8.16-9.184
+			c1.376-4,1.12-8.416-0.768-12.256C138.112,138.72,128,94.464,128,48c0-8.832-7.168-16-16-16H16C7.168,32,0,39.168,0,48
+			c0,238.208,193.792,432,432,432c8.832,0,16-7.168,16-16v-96C448,359.168,440.832,352,432,352z"></path>
+        </g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+    </svg>
+  </a>
+  <a href="" class="sidebarItem" data-tooltip="Messenger">
+    <svg id="fi_2111399" enable-background="new 0 0 24 24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path d="m0 11.111c0 3.496 1.744 6.615 4.471 8.652v4.237l4.086-2.242c1.09.301 2.245.465 3.442.465 6.627 0 12-4.974 12-11.111.001-6.137-5.372-11.112-11.999-11.112s-12 4.974-12 11.111zm10.734-3.112 3.13 3.259 5.887-3.259-6.56 6.962-3.055-3.258-5.963 3.259z"></path>
+    </svg>
+  </a>
+  <a href="" class="sidebarItem" data-tooltip="Instagram">
+    <svg id="fi_2111491" enable-background="new 0 0 24 24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path d="m12.004 5.838c-3.403 0-6.158 2.758-6.158 6.158 0 3.403 2.758 6.158 6.158 6.158 3.403 0 6.158-2.758 6.158-6.158 0-3.403-2.758-6.158-6.158-6.158zm0 10.155c-2.209 0-3.997-1.789-3.997-3.997s1.789-3.997 3.997-3.997 3.997 1.789 3.997 3.997c.001 2.208-1.788 3.997-3.997 3.997z"></path>
+      <path d="m16.948.076c-2.208-.103-7.677-.098-9.887 0-1.942.091-3.655.56-5.036 1.941-2.308 2.308-2.013 5.418-2.013 9.979 0 4.668-.26 7.706 2.013 9.979 2.317 2.316 5.472 2.013 9.979 2.013 4.624 0 6.22.003 7.855-.63 2.223-.863 3.901-2.85 4.065-6.419.104-2.209.098-7.677 0-9.887-.198-4.213-2.459-6.768-6.976-6.976zm3.495 20.372c-1.513 1.513-3.612 1.378-8.468 1.378-5 0-7.005.074-8.468-1.393-1.685-1.677-1.38-4.37-1.38-8.453 0-5.525-.567-9.504 4.978-9.788 1.274-.045 1.649-.06 4.856-.06l.045.03c5.329 0 9.51-.558 9.761 4.986.057 1.265.07 1.645.07 4.847-.001 4.942.093 6.959-1.394 8.453z"></path>
+      <circle cx="18.406" cy="5.595" r="1.439"></circle>
+    </svg>
+  </a>
+  <a href="" class="sidebarItem" data-tooltip="Telegram">
+    <svg id="fi_2111708" enable-background="new 0 0 24 24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path d="m9.417 15.181-.397 5.584c.568 0 .814-.244 1.109-.537l2.663-2.545 5.518 4.041c1.012.564 1.725.267 1.998-.931l3.622-16.972.001-.001c.321-1.496-.541-2.081-1.527-1.714l-21.29 8.151c-1.453.564-1.431 1.374-.247 1.741l5.443 1.693 12.643-7.911c.595-.394 1.136-.176.691.218z"></path>
+    </svg>
+  </a>
+  <a href="" class="sidebarItem buttonTrigger">
+    <svg version="1.1" id="fi_626033" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 490.651 490.651" style="enable-background:new 0 0 490.651 490.651;" xml:space="preserve">
+      <g>
+        <g>
+          <path d="M370.211,472.453L143.053,245.317L370.189,18.203c4.16-4.16,4.16-10.923,0-15.083c-4.16-4.16-10.923-4.16-15.083,0
+			L120.44,237.787c-4.16,4.16-4.16,10.923,0,15.083l234.667,234.667c2.091,2.091,4.821,3.115,7.552,3.115s5.461-1.045,7.552-3.115
+			C374.371,483.376,374.371,476.613,370.211,472.453z"></path>
+        </g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+    </svg>
+  </a>
+</div>
+</div>
+
+<!-- Sidebar -->
+<div class="sidebar">
+  <div class="fixedSidebar fixedSidebarBottom">
+  <a href="" class="sidebarItem" data-tooltip="Hotline">
+    <svg version="1.1" id="fi_725606" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 480 480" style="enable-background:new 0 0 480 480;" xml:space="preserve">
+      <g>
+        <g>
+          <path d="M256,128c-8.832,0-16,7.168-16,16c0,8.832,7.168,16,16,16c35.296,0,64,28.704,64,64c0,8.832,7.168,16,16,16
+			c8.832,0,16-7.168,16-16C352,171.072,308.928,128,256,128z"></path>
+        </g>
+      </g>
+      <g>
+        <g>
+          <path d="M256,64c-8.832,0-16,7.168-16,16c0,8.832,7.168,16,16,16c70.592,0,128,57.408,128,128c0,8.832,7.168,16,16,16
+			c8.832,0,16-7.168,16-16C416,135.776,344.224,64,256,64z"></path>
+        </g>
+      </g>
+      <g>
+        <g>
+          <path d="M256,0c-8.832,0-16,7.168-16,16c0,8.832,7.168,16,16,16c105.888,0,192,86.112,192,192c0,8.832,7.168,16,16,16
+			c8.832,0,16-7.168,16-16C480,100.48,379.488,0,256,0z"></path>
+        </g>
+      </g>
+      <g>
+        <g>
+          <path d="M432,352c-46.464,0-90.72-10.112-131.52-30.048c-3.84-1.92-8.256-2.144-12.256-0.736c-4.032,1.408-7.328,4.352-9.184,8.16
+			l-25.152,52.064C188.8,345.12,134.912,291.264,98.624,226.176l52.032-25.216c3.84-1.856,6.752-5.152,8.16-9.184
+			c1.376-4,1.12-8.416-0.768-12.256C138.112,138.72,128,94.464,128,48c0-8.832-7.168-16-16-16H16C7.168,32,0,39.168,0,48
+			c0,238.208,193.792,432,432,432c8.832,0,16-7.168,16-16v-96C448,359.168,440.832,352,432,352z"></path>
+        </g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+    </svg>
+  </a>
+  <a href="" class="sidebarItem" data-tooltip="Messenger">
+    <svg id="fi_2111399" enable-background="new 0 0 24 24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path d="m0 11.111c0 3.496 1.744 6.615 4.471 8.652v4.237l4.086-2.242c1.09.301 2.245.465 3.442.465 6.627 0 12-4.974 12-11.111.001-6.137-5.372-11.112-11.999-11.112s-12 4.974-12 11.111zm10.734-3.112 3.13 3.259 5.887-3.259-6.56 6.962-3.055-3.258-5.963 3.259z"></path>
+    </svg>
+  </a>
+  <a href="" class="sidebarItem" data-tooltip="Instagram">
+    <svg id="fi_2111491" enable-background="new 0 0 24 24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path d="m12.004 5.838c-3.403 0-6.158 2.758-6.158 6.158 0 3.403 2.758 6.158 6.158 6.158 3.403 0 6.158-2.758 6.158-6.158 0-3.403-2.758-6.158-6.158-6.158zm0 10.155c-2.209 0-3.997-1.789-3.997-3.997s1.789-3.997 3.997-3.997 3.997 1.789 3.997 3.997c.001 2.208-1.788 3.997-3.997 3.997z"></path>
+      <path d="m16.948.076c-2.208-.103-7.677-.098-9.887 0-1.942.091-3.655.56-5.036 1.941-2.308 2.308-2.013 5.418-2.013 9.979 0 4.668-.26 7.706 2.013 9.979 2.317 2.316 5.472 2.013 9.979 2.013 4.624 0 6.22.003 7.855-.63 2.223-.863 3.901-2.85 4.065-6.419.104-2.209.098-7.677 0-9.887-.198-4.213-2.459-6.768-6.976-6.976zm3.495 20.372c-1.513 1.513-3.612 1.378-8.468 1.378-5 0-7.005.074-8.468-1.393-1.685-1.677-1.38-4.37-1.38-8.453 0-5.525-.567-9.504 4.978-9.788 1.274-.045 1.649-.06 4.856-.06l.045.03c5.329 0 9.51-.558 9.761 4.986.057 1.265.07 1.645.07 4.847-.001 4.942.093 6.959-1.394 8.453z"></path>
+      <circle cx="18.406" cy="5.595" r="1.439"></circle>
+    </svg>
+  </a>
+  <a href="" class="sidebarItem" data-tooltip="Telegram">
+    <svg id="fi_2111708" enable-background="new 0 0 24 24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path d="m9.417 15.181-.397 5.584c.568 0 .814-.244 1.109-.537l2.663-2.545 5.518 4.041c1.012.564 1.725.267 1.998-.931l3.622-16.972.001-.001c.321-1.496-.541-2.081-1.527-1.714l-21.29 8.151c-1.453.564-1.431 1.374-.247 1.741l5.443 1.693 12.643-7.911c.595-.394 1.136-.176.691.218z"></path>
+    </svg>
+  </a>
+  <a href="" class="sidebarItem buttonTrigger">
+    <svg version="1.1" id="fi_748113" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 512 512" style="enable-background:new 0 0 512 512;" xml:space="preserve">
+      <g>
+        <g>
+          <path d="M492,236H276V20c0-11.046-8.954-20-20-20c-11.046,0-20,8.954-20,20v216H20c-11.046,0-20,8.954-20,20s8.954,20,20,20h216
+			v216c0,11.046,8.954,20,20,20s20-8.954,20-20V276h216c11.046,0,20-8.954,20-20C512,244.954,503.046,236,492,236z"></path>
+        </g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+      <g>
+      </g>
+    </svg>
+  </a>
+</div>
+</div>
+</body>
+</html>

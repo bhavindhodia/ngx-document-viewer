@@ -11,6 +11,13 @@
     "noFallthroughCasesInSwitch": true,
     "skipLibCheck": true,
     "isolatedModules": true,
+    "paths": {
+      "@ngx-document-viewer":["./projects/ngx-document-viewer/src/public-api.ts"],
+      "ngx-document-viewer/*":["./projects/ngx-document-viewer/*"],
+      "ngx-document-viewer": [
+        "./dist/ngx-document-viewer"
+      ]
+    },
     "esModuleInterop": true,
     "sourceMap": true,
     "declaration": false,

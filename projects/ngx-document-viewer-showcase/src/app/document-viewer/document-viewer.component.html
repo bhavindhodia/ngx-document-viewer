@@ -1,0 +1,7 @@
+<app-navbar>
+  <div class="title">
+
+     {{getServiceStatus$ |async | json}}
+  </div>
+  <lib-document-viewer [documentUrl]="documentUrl"></lib-document-viewer>
+</app-navbar>

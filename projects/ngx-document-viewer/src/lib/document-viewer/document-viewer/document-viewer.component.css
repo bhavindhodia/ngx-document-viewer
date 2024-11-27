@@ -1,0 +1,15 @@
+:host {
+  /*  position: absolute;
+    top: 4rem;
+    left: 50%;
+    right: 50%;
+    transform: translate(-50%,-50%);
+    height: 100%; */
+  position: relative;
+  z-index: 1;
+  display: block;
+  height: 100%;
+  overflow: auto;
+}
+
+
