@@ -1,7 +1,10 @@
 <app-navbar>
   <div class="title">
-
-     {{getServiceStatus$ |async | json}}
+    <p-button icon="pi pi-arrow-left" (onClick)="navigate(-1)" />
+    {{(getServiceStatus$ |async) | json }}
+    <p-button icon="pi pi-arrow-right" (onClick)="navigate(1)" />
   </div>
-  <lib-document-viewer [documentUrl]="documentUrl"></lib-document-viewer>
+  @if (documentUrl() !==null) {
+    <lib-document-viewer [documentUrl]="documentUrl()"></lib-document-viewer>
+  }
 </app-navbar>

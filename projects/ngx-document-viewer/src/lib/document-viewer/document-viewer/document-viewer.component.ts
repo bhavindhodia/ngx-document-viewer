@@ -1,17 +1,20 @@
 import {
+  AfterViewInit,
   Component,
+  effect,
+  inject,
   input,
   OnInit,
-  ViewChild,
-  ViewContainerRef,
 } from '@angular/core';
+import {
+  DynamicComponentLoader,
+  DynamicComponentLoaderType,
+  ValidDocumentExtensions,
+} from './dynamic-component-loader.service';
+import { NgComponentOutlet } from '@angular/common';
+import { ResourceLoaderService } from '../../shared/services/resource-loader.service';
+import { ErrorComponent } from '../../shared/components/error/error.component';
 
-export enum ValidDocumentExtensions {
-  PDF = 'pdf',
-  TIFF = 'tiff',
-  JPEG = 'jpeg',
-  JPG = 'jpg',
-}
 
 export interface ComponentInputTypes {
   name: string;
@@ -22,83 +25,52 @@ export interface ComponentInputTypes {
 @Component({
   selector: 'lib-document-viewer',
   standalone: true,
-  imports: [],
-  templateUrl: './document-viewer.component.html',
+  imports: [NgComponentOutlet],
+  template: `
+    <ng-container
+      *ngComponentOutlet="
+        dynamicComponent.component;
+        inputs: dynamicComponent.inputs
+      "
+    />
+  `,
   styleUrl: './document-viewer.component.css',
 })
-export class DocumentViewerComponent implements OnInit {
-  @ViewChild('documentContainer', {
-    static: true,
-    read: ViewContainerRef,
-  })
-  container!: ViewContainerRef;
+export class DocumentViewerComponent implements OnInit, AfterViewInit {
   documentUrl = input.required<string>();
 
-  constructor() {}
-  ngOnInit(): void {
-    const documentType = this.getExtensionFromUrl(this.documentUrl());
-    this.createDynamicWidget(documentType, {
-      name: 'src',
-      value: this.documentUrl(),
+  documentType: ValidDocumentExtensions | undefined = undefined;
+  private _dynamicComponentService = inject(DynamicComponentLoader);
+  private _resourceLoaderService = inject(ResourceLoaderService);
+  private componentList!: Map<
+    ValidDocumentExtensions,
+    DynamicComponentLoaderType
+  >;
+
+  get dynamicComponent() {
+    return (
+      (this.documentType && this.componentList.get(this.documentType)) ?? {
+        component: ErrorComponent,
+        inputs: {},
+      }
+    );
+  }
+  constructor() {
+    effect(() => {
+      console.log('DOCUMENT VIEWER EFFECT RUN', this.documentUrl());
+      this.documentType = this.getExtensionFromUrl(this.documentUrl());
+      this.componentList = this._dynamicComponentService.setComponents({
+        src: this.documentUrl(),
+      });
+      this._resourceLoaderService.src = this.documentUrl();
     });
   }
+  ngOnInit(): void {}
+  ngAfterViewInit(): void {}
 
-  getComponentByTypes = (
-    type: string,
-    componentInputs?: ComponentInputTypes
-  ) => {
-    switch (type) {
-      case ValidDocumentExtensions.PDF:
-        return {
-          component: () =>
-            import('../../pdf-viewer/pdf-viewer/pdf-viewer.component').then(
-              (m) => m.PdfViewerComponent
-            ),
-          inputs: [
-            { name: 'title', value: 'PDF From Document' },
-            componentInputs,
-          ],
-        };
-      case ValidDocumentExtensions.JPEG:
-      case ValidDocumentExtensions.JPG:
-        return {
-          component: () =>
-            import(
-              '../../image-viewer/image-viewer/image-viewer.component'
-            ).then((m) => m.ImageViewerComponent),
-          inputs: [{ name: 'title', value: 'PDF From Document' }],
-          //inputs: statisticData.find((item) => item['id'] === type)!,
-        };
-      default:
-        throw new Error('Weird ! Invalid File Extension');
-      /*   return {
-          component: () =>
-            import('./@shared/components/widget/widget.component').then(
-              (m) => m.WidgetComponent
-            ),
-          inputs: statisticData.find((item) => item['id'] === type)!,
-        }; */
-    }
-  };
-  async createDynamicWidget(
-    type: string,
-    additionalInput?: ComponentInputTypes
-  ) {
-    this.container.clear();
-
-    const { component, inputs } = this.getComponentByTypes(
-      type,
-      additionalInput
-    );
-    console.log('TYPE', type);
-
-    const componentInstance = await component();
-    const componentRef = this.container.createComponent(componentInstance);
-    inputs.forEach(
-      (input) => input && componentRef.setInput(input.name, input.value)
-    );
-  }
-  private getExtensionFromUrl(url: string): string {
+  private getExtensionFromUrl(
+    url: string
+  ): ValidDocumentExtensions | undefined {
     const extension = new URL(url).pathname
       .split('/')
       .pop()
@@ -106,8 +78,8 @@ export class DocumentViewerComponent implements OnInit {
       .pop()
       ?.toLowerCase();
     if (extension) {
-      return extension.trim();
+      return extension.trim() as ValidDocumentExtensions;
     }
-    return '';
+    return;
   }
 }

@@ -888,19 +888,7 @@
     overflow: hidden;
   }
 
-  .pdfViewer .page {
-    direction: ltr;
-    width: 816px;
-    height: 1056px;
-    margin: var(--page-margin);
-    position: relative;
-    overflow: visible;
-    border: var(--page-border);
-    -o-border-image: var(--page-border-image);
-    border-image: var(--page-border-image);
-    background-clip: content-box;
-    background-color: rgba(255, 255, 255, 1);
-  }
+
 
   .pdfViewer .dummyPage {
     position: relative;
@@ -968,7 +956,7 @@
 
   .pdfViewer .page canvas {
     margin: 0;
-    /* display: block; */
+    display: block;
   }
 
   .pdfViewer .page canvas[hidden] {
@@ -1008,6 +996,19 @@
   .pdfPresentationMode .pdfViewer .page {
     margin: 0 auto;
     border: 2px solid transparent;
+  }
+  .pdfViewer .page {
+    direction: ltr;
+    width: 816px;
+    height: 1056px;
+    margin: var(--page-margin);
+    position: relative;
+    overflow: visible;
+    border: var(--page-border);
+    -o-border-image: var(--page-border-image);
+    border-image: var(--page-border-image);
+    background-clip: content-box;
+    background-color: rgba(255, 255, 255, 1);
   }
 
   canvas{

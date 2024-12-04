@@ -1,10 +1,11 @@
 import {
   DestroyRef,
-  ElementRef, inject,
+  ElementRef,
+  inject,
   Injectable,
   Optional,
   signal,
-  SkipSelf
+  SkipSelf,
 } from '@angular/core';
 import {
   PDFDocumentProxy,
@@ -16,27 +17,28 @@ import * as PDFJS from 'pdfjs-dist';
 import * as PDFJSViewer from 'pdfjs-dist/web/pdf_viewer.mjs';
 import { EventBus, PDFViewerOptions } from 'pdfjs-dist/types/web/pdf_viewer';
 import { createEventBus } from '../utils/event-bus.utils';
-import { BehaviorSubject, from, fromEvent, Observable, skipWhile } from 'rxjs';
+import { BehaviorSubject, from, Observable, skipWhile } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   LoadingProgress,
   LoadingProgressStatus,
   PDFProgressData,
   RenderTextMode,
-  ZoomScale,
 } from '../utils/typings';
-
+import { ResourceLoader } from 'ngx-document-viewer/src/lib/shared/model/resource-loader';
+import { ResourceLoaderService } from 'ngx-document-viewer/src/lib/shared/services/resource-loader.service';
 
 @Injectable({
   providedIn: 'root',
 })
-export class PdfViewerService {
+export class PdfViewerService extends ResourceLoader {
   //Static Values
   private static CSS_UNITS = 96.0 / 72.0;
   private static BORDER_WIDTH = 9;
   //private static PDF_CONTAINER_ID = 'pdf-viewer-container';
   //Services
   destroy$ = inject(DestroyRef);
+  _resource = inject(ResourceLoaderService);
   // Subjects
   progressInitialValue: LoadingProgress = {
     loaded: 0,
@@ -76,14 +78,6 @@ export class PdfViewerService {
   get pdfDocument() {
     return this._pdf;
   }
-  //AutoResize
-  private _canAutoResize = true;
-  get canAutoResize() {
-    return this._canAutoResize;
-  }
-  set canAutoResize(value: boolean) {
-    this._canAutoResize = Boolean(value);
-  }
   //Page
   private _page: number = 1;
   get page(): number {
@@ -99,54 +93,13 @@ export class PdfViewerService {
     this._page = pageNumber;
   }
 
-  //Zoom Levels
-  private _zoom = 1.0;
-  public set zoom(zoomLevel: number) {
-    if (zoomLevel <= 0) return;
-    this._zoom = zoomLevel;
-  }
-  private _zoomScale: ZoomScale = 'page-width';
-  set zoomScale(value: ZoomScale) {
-    this._zoomScale = value;
-  }
-
-  get zoomScale() {
-    return this._zoomScale;
-  }
-  private _rotation = 0;
-  get rotation() {
-    return this._rotation;
-  }
-  set rotation(value: number) {
-    if (!(typeof value === 'number' && value % 90 === 0)) {
-      console.warn('Invalid pages rotation angle.');
-      return;
-    }
-    this._rotation = value;
-  }
-
-  private _originalSize = true;
-  set originalSize(value: boolean) {
-    this._originalSize = Boolean(value);
-  }
-  private _stickToPage = false;
-  set stickToPage(value: boolean) {
-    this._stickToPage = Boolean(value);
-  }
-  private _fitToPage = false;
-  set fitToPage(value: boolean) {
-    this._fitToPage = Boolean(value);
-  }
-  private _showBorders = true;
-  set showBorders(value: boolean) {
-    this._showBorders = Boolean(value);
-  }
   myPdfContainer: HTMLDivElement | null = null;
   constructor(
-    @Optional() @SkipSelf() pdfViewerService: PdfViewerService,
+    @Optional() @SkipSelf() pdfViewerService: PdfViewerService
     //@Inject(DOCUMENT) private document: Document
     //private be: PDFJSViewer.EventBus
   ) {
+    super();
     if (pdfViewerService) {
       throw new Error('Instance of this service already exist');
     }
@@ -174,7 +127,8 @@ export class PdfViewerService {
     url: string,
     canvas: ElementRef<HTMLDivElement>
   ): PDFDocumentProxy | null {
-    //this.myPdfContainer = this.document.getElementById(PdfViewerService.PDF_CONTAINER_ID) as HTMLDivElement;
+    console.log('PDFVIIEWER SERVICE', this._resource.src);
+    //this.loadingProgress_.next(this.progressInitialValue);
     this.setupViewer(canvas);
     this.clear();
     this._loadingTask = getDocument({ url });
@@ -192,6 +146,7 @@ export class PdfViewerService {
       });
     return this._pdf;
   }
+
   private update(canvas: ElementRef<HTMLDivElement>) {
     this.page = this._page;
     this.render(canvas);
@@ -225,9 +180,7 @@ export class PdfViewerService {
         .subscribe((c) => {
           this.updateSize(canvas);
         });
-      //sub.unsubscribe()
     } else {
-      console.log('ELSE');
       this.updateSize(canvas);
     }
   }
@@ -245,6 +198,7 @@ export class PdfViewerService {
           let scale = this._zoom;
           let stickToPage = true;
 
+          console.log('viewPort', viewportWidth);
           // Scale the document when it shouldn't be in original size or doesn't fit into the viewport
           if (
             !this._originalSize ||
@@ -253,6 +207,7 @@ export class PdfViewerService {
                 canvas.nativeElement.querySelector('div')!.clientWidth)
           ) {
             const viewPort = page.getViewport({ scale: 1, rotation });
+
             scale = this.getScale(
               canvas.nativeElement.querySelector('div')!,
               viewPort.width,
@@ -261,8 +216,6 @@ export class PdfViewerService {
             stickToPage = !this._stickToPage;
           }
           this.pdfViewer.currentScale = scale;
-          this.pdfViewer.imageResourcesPath =
-            'http://localhost:3000/files/img1.JPG';
           if (stickToPage) {
             this.pdfViewer.scrollPageIntoView({
               pageNumber: page.pageNumber,
@@ -273,6 +226,7 @@ export class PdfViewerService {
       });
   }
   private setLoadingProgress(): void {
+
     this._loadingTask.onProgress = (progressData: PDFProgressData) => {
       const percent = (progressData.loaded / progressData.total) * 100;
       this.loadingProgress_.next({
@@ -286,7 +240,8 @@ export class PdfViewerService {
         message: `Loading PDF: ${Math.round(percent)}%`,
       });
       if (progressData.loaded === progressData.total) {
-        this.loadingProgress_.complete();
+        //this.loadingProgress_.complete();
+
       }
     };
   }
@@ -330,7 +285,7 @@ export class PdfViewerService {
     return (this._zoom * ratio) / PdfViewerService.CSS_UNITS;
   }
   public setupViewer(canvas: ElementRef<HTMLDivElement>) {
-    console.log('setupViewer called');
+    console.log('PdfViewerService setupViewer');
     if (this.pdfViewer) {
       this.pdfViewer.setDocument(null as any);
     }
@@ -385,6 +340,7 @@ export class PdfViewerService {
     if (this._loadingTask && !this._loadingTask.destroyed) {
       this._loadingTask.destroy();
     }
+    //this.resetLoadingStatus()
 
     if (this._pdf) {
       //this._latestScrolledPage = 0;

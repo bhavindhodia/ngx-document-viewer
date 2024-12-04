@@ -1,5 +1,6 @@
 import {
   AfterViewChecked,
+  ChangeDetectionStrategy,
   Component,
   DestroyRef,
   ElementRef,
@@ -30,6 +31,7 @@ import { debounceTime, filter, fromEvent } from 'rxjs';
     </div>
   `,
   styleUrl: './pdf-viewer.component.scss',
+  changeDetection:ChangeDetectionStrategy.OnPush
 })
 export class PdfViewerComponent implements OnInit, OnDestroy, AfterViewChecked {
   title = input<string>();
@@ -66,42 +68,46 @@ export class PdfViewerComponent implements OnInit, OnDestroy, AfterViewChecked {
   }
 
   ngOnInit(): void {
+    console.log('PdfViewerComponent OnINIT');
+//assign(PDFJS, 'verbosity', PDFJS.VerbosityLevel.INFOS);
     //this.initEventBus()
     this.setupResizeListener();
-    this.pdfViewerService.setupViewer(this.pdfContainer);
+    //this.pdfViewerService.setupViewer(this.pdfContainer);
   }
   ngAfterViewChecked() {
-    /* console.log('VIEW CHECKED'); */
     if (this.isInitialized) {
       return;
     }
     const offset =
-      this.pdfContainer.nativeElement.querySelector('div')!.offsetParent;
+    this.pdfContainer.nativeElement.querySelector('div')!.offsetParent;
 
     if (this.isVisible === true && offset == null) {
       this.isVisible = false;
       return;
     }
     if (this.isVisible === false && offset != null) {
+      console.log('PdfViewerComponent VIEW CHECKED');
       this.isVisible = true;
       setTimeout(() => {
         this.ngOnChanges({ src: this.src } as any);
       });
     }
+
   }
-  private initialize(): void {
+  /* private initialize(): void {
     if (isSSR() || !this.isVisible) {
       return;
     }
 
     this.isInitialized = true;
     this.pdfViewerService.setupViewer(this.pdfContainer);
-  }
+  } */
   ngOnChanges(changes: SimpleChanges) {
     if (isSSR() || !this.pdfContainer.nativeElement.offsetParent) {
       return;
     }
     if ('src' in changes) {
+      console.log('PdfViewerComponent ONCHANGE',changes);
       this.loadPDF();
     }
   }
@@ -135,7 +141,7 @@ export class PdfViewerComponent implements OnInit, OnDestroy, AfterViewChecked {
   }
 
   ngOnDestroy(): void {
-    console.log('DESTROYED');
+    console.log('PdfViewerComponent DESTROYED');
     this.pdfViewerService.clear();
   }
 }
