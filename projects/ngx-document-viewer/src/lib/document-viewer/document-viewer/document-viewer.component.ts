@@ -74,7 +74,7 @@ export class DocumentViewerComponent implements OnInit, AfterViewInit {
     const extension = new URL(url).pathname
       .split('/')
       .pop()
-      ?.split('.')
+      ?.split(".")
       .pop()
       ?.toLowerCase();
     if (extension) {

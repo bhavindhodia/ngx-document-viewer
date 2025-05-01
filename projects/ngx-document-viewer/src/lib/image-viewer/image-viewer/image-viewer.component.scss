@@ -25,7 +25,7 @@ canvas {
   display: none !important;
 }
  */
-.image-viewer-container {
+/*.image-viewer-container {
   overflow-x: auto;
   position: absolute;
   height: 100%;
@@ -73,5 +73,12 @@ canvas {
     height: auto !important;
     max-width: 100%;
     object-fit: contain;
-  }
+}
+  }*/
+:host {
+  width: 100%;
+  border: 1px solid blue;
+  display: flex;
+  justify-content: center;
+  align-content: center;
 }

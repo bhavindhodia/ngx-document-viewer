@@ -1,83 +1,79 @@
-import { AfterViewChecked, AfterViewInit, Component, ElementRef, inject, Input, input, OnDestroy, OnInit, SimpleChange, SimpleChanges } from '@angular/core';
+import {
+  AfterViewChecked,
+  AfterViewInit,
+  Component,
+  ElementRef,
+  inject,
+  Input,
+  input, NgZone,
+  OnChanges,
+  OnDestroy,
+  OnInit,
+  SimpleChanges
+} from '@angular/core';
 import { ImageViewerService } from './image-viewer.service';
+import {FabricService} from 'ngx-document-viewer/src/lib/shared/services/fabric.service';
+import {Canvas} from 'fabric';
 
 @Component({
   selector: 'lib-image-viewer',
   standalone: true,
   imports: [],
-  /* template: ` <canvas #imageContainer> </canvas> `, */
-  template: `
+   template: ` <canvas id="fabricSurface"> </canvas> `,
+  /*template: `
     <div
       #pdfViewerContainer
       id="image-viewer-container"
       class="image-viewer-container"
     >
       <div class="image-viewer">
-        <canvas #imageCanvas> </canvas>
+        <canvas id="fabricSurface"></canvas>
       </div>
     </div>
-  `,
+  `,*/
   styleUrl: './image-viewer.component.scss',
-  /* styles: [
-    `
-      :host {
-        display: block;
-      }
-      :host canvas {
-        margin: 0 auto;
-        display: block;
-      }
-      [hidden] {
-        display: none !important;
-      }
-    `,
-  ], */
 })
 export class ImageViewerComponent
-  implements OnInit, AfterViewInit, AfterViewChecked, OnDestroy
+  implements OnInit, AfterViewInit, OnDestroy,OnChanges
 {
   title = input<string>();
   src = input.required<string>();
-
-  private isVisible = false;
+  //
 
   private _imageService = inject(ImageViewerService);
-  private imageContainer: ElementRef<HTMLDivElement> = inject(ElementRef);
-
+  private _zone = inject(NgZone)
+  private _fabricService = inject(FabricService)
+  private imageContainer: ElementRef<HTMLDivElement> = inject(ElementRef) as ElementRef<HTMLDivElement>;
+  protected _canvas?: Canvas;
   ngOnInit(): void {
     console.log('ImageViewerComponent OnInit');
+    /*{
+      this._zone.runOutsideAngular(() => {
+        this._canvas = new Canvas('fabricSurface', {
+          backgroundColor: '#ebebef',
+          selection: false,
+          preserveObjectStacking: true,
+        });
+
+        this._fabricService.canvas = this._canvas;
+      });
+    }*/
+    //this._imageService.initializeCanvas("fabricSurface")
+    //this._imageService.loadImageToCanvas(this.src())
   }
   ngAfterViewInit(): void {
     console.log('ImageViewerComponent AfterViewInit');
-  }
-  ngAfterViewChecked(): void {
-    /*    const offset =
-    this.imageContainer.nativeElement.querySelector('div')!.offsetParent;
-
-    if (this.isVisible === true && offset == null) {
-      this.isVisible = false;
-      return;
-    }
-    if (this.isVisible === false && offset != null) {
-      console.log('PdfViewerComponent VIEW CHECKED');
-      this.isVisible = true;
-      setTimeout(() => {
-        //this.ngOnChanges({ src: this.src } as any);
-      });
-  } */
   }
 
   ngOnChanges(changes: SimpleChanges) {
     console.log('ImageViewerComponent SimpleChanges', changes);
     if ('src' in changes) {
-      console.log('PdfViewerComponent ONCHANGE', changes);
-      this._imageService.loadImage(
-        this.src(),
-        this.imageContainer
-      );
+      console.log('ImageViewerComponent ONCHANGE', changes);
+      this._imageService.loadImageToCanvas(this.src())
     }
   }
   ngOnDestroy(): void {
     console.log('ImageViewerComponent ngOnDestroy');
+    this._imageService.destroyedCanvas();
   }
 }
