@@ -1,10 +1,16 @@
-<app-navbar>
-  <div class="title">
-    <p-button icon="pi pi-arrow-left" (onClick)="navigate(-1)" />
-    {{(getServiceStatus$ |async) | json }}
-    <p-button icon="pi pi-arrow-right" (onClick)="navigate(1)" />
-  </div>
+<main>
+  <app-navbar (nextNavigation)="navigate(1)" (prevNavigation)="navigate(-1)" >
+  </app-navbar>
+ <!-- <div class="absolute top-3rem left-3 bg-gray-800 text-white p-2 rounded-md shadow-md z-50">
+    <div class="flex items-center mb-1">
+      {{(getServiceStatus$ |async) | json }}
+    </div>
+  </div>-->
+
   @if (documentUrl() !==null) {
-    <lib-document-viewer [documentUrl]="documentUrl()"></lib-document-viewer>
+    <div class="main-container">
+      <lib-document-viewer [documentUrl]="documentUrl()"></lib-document-viewer>
+    </div>
   }
-</app-navbar>
+
+</main>

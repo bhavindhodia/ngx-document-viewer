@@ -31,15 +31,14 @@ import { ButtonModule } from 'primeng/button';
 export class DocumentViewerComponent implements OnInit, AfterViewInit {
   private _toolbarService = inject(ToolbarService);
   pdfViewerService = inject(PdfViewerService);
-  private route = inject(ActivatedRoute);
-  private router = inject(Router);
-  /* documentUrl = 'http://localhost:3000/files/img1.JPG'; */
-  /* documentUrl = 'http://localhost:3000/files/sample.pdf'; */
   documentUrl = signal<string>('');
   getServiceStatus$ = this.pdfViewerService.loadingProgress$;
   currentIndex = 0;
 
   files = [
+    'tiff1.tiff',
+    'sample.pdf',
+    'tiff5.tiff',
     'samplejpeg.jpg',
     'SamplePNG.png',
     'img1.jpg',
@@ -57,7 +56,9 @@ export class DocumentViewerComponent implements OnInit, AfterViewInit {
     //this.getServiceStatus$ = this._toolbarService.getEditPen();
   }
   navigate(value: number = 0) {
-    if (this.currentIndex === 0 && value === -1) return;
+    if (this.currentIndex === 0 && value === -1) {
+      this.currentIndex= this.files.length
+    };
     this.currentIndex += value;
     this.documentUrl.set(
       `http://localhost:3000/files/${this.files[this.currentIndex]}`

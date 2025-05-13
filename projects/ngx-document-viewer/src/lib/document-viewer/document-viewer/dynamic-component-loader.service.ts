@@ -1,5 +1,5 @@
 import { Injectable, Type } from '@angular/core';
-import { ImageViewerComponent, PdfViewerComponent } from '@ngx-document-viewer';
+import {ImageViewerComponent, PdfViewerComponent, TiffViewerComponent} from '@ngx-document-viewer';
 export enum ValidDocumentExtensions {
   PDF = 'pdf',
   TIFF = 'tiff',
@@ -32,6 +32,10 @@ export class DynamicComponentLoader {
     });
     this.data.set(ValidDocumentExtensions.PNG, {
       component: ImageViewerComponent,
+      inputs: { ...additionalInputs },
+    });
+    this.data.set(ValidDocumentExtensions.TIFF, {
+      component: TiffViewerComponent,
       inputs: { ...additionalInputs },
     });
     return this.data
