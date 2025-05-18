@@ -36,7 +36,7 @@ export class ImageViewerService extends ResourceLoader {
 
   loadImageToCanvas(imageUrl: string): void {
     if (!this.canvas) {
-      console.error('Canvas is not initialized.');
+      console.warn('Canvas is not initialized.');
       this.initializeCanvas(ImageViewerService.CANVAS_ID)
     }
     FabricImage.fromURL(imageUrl).then((img) => {

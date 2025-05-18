@@ -10,7 +10,7 @@ import {
 import {
   PDFDocumentProxy,
   PDFPageProxy,
-  PDFDocumentLoadingTask,
+  PDFDocumentLoadingTask, TypedArray, DocumentInitParameters,
 } from 'pdfjs-dist/types/src/display/api';
 import { getDocument } from 'pdfjs-dist';
 import * as PDFJS from 'pdfjs-dist';
@@ -124,14 +124,15 @@ export class PdfViewerService extends ResourceLoader {
   }
 
   loadPdf(
-    url: string,
+    url: string | URL | TypedArray | ArrayBuffer | DocumentInitParameters,
     canvas: ElementRef<HTMLDivElement>
   ): PDFDocumentProxy | null {
-    console.log('PDFVIIEWER SERVICE', this._resource.src);
+    console.log('PDFVIIEWER SERVICE URL', this.src);
     //this.loadingProgress_.next(this.progressInitialValue);
     this.setupViewer(canvas);
     this.clear();
-    this._loadingTask = getDocument({ url });
+    //this._loadingTask = getDocument({ url });
+    this._loadingTask = getDocument(url);
     this.setLoadingProgress();
     from(this._loadingTask!.promise as Promise<PDFDocumentProxy>)
       .pipe(takeUntilDestroyed(this.destroy$))

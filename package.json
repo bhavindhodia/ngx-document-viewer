@@ -23,6 +23,7 @@
     "@tailwindcss/postcss": "^4.1.6",
     "autoprefixer": "^10.4.21",
     "fabric": "^6.6.2",
+    "pdf-lib": "^1.17.1",
     "pdfjs-dist": "^4.8.69",
     "postcss": "^8.5.3",
     "primeicons": "^7.0.0",
@@ -32,6 +33,7 @@
     "tailwindcss-primeui": "^0.6.1",
     "tiff": "^6.2.0",
     "tslib": "^2.3.0",
+    "utif2": "^4.1.0",
     "zone.js": "~0.14.10"
   },
   "devDependencies": {

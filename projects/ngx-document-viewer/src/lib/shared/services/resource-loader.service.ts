@@ -1,11 +1,12 @@
 import { Injectable } from '@angular/core';
 import { ZoomScale } from '../../pdf-viewer/pdf-viewer/utils/typings';
+import {TypedArray} from 'pdfjs-dist/types/src/display/api';
 
 @Injectable({
   providedIn: 'root',
 })
 export class ResourceLoaderService {
-  protected _src: string | undefined = undefined;
+  protected _src: string = '';
   protected _rotation = 0;
   protected _zoom = 1.0;
   protected _zoomScale: ZoomScale = 'page-width';
@@ -17,6 +18,9 @@ export class ResourceLoaderService {
 
   set src(value: string) {
     this._src = value;
+  }
+  get src(){
+    return this._src;
   }
   //Rotate content
   // Should be multiple of 90

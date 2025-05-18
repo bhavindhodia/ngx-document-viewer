@@ -36,6 +36,7 @@ export class DocumentViewerComponent implements OnInit, AfterViewInit {
   currentIndex = 0;
 
   files = [
+    'multiPageTiff.tiff',
     'tiff1.tiff',
     'sample.pdf',
     'tiff5.tiff',

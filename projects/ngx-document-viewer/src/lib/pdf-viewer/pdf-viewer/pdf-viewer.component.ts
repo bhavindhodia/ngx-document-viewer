@@ -11,12 +11,14 @@ import {
   OnInit,
   SimpleChanges,
 } from '@angular/core';
-import { assign, isSSR } from './utils/helpers';
+import {assign, isSSR} from './utils/helpers';
 import * as PDFJS from 'pdfjs-dist';
-import { GlobalWorkerOptions } from 'pdfjs-dist';
-import { PdfViewerService } from './services/pdf.viewer.service';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { debounceTime, filter, fromEvent } from 'rxjs';
+import {GlobalWorkerOptions} from 'pdfjs-dist';
+import {PdfViewerService} from './services/pdf.viewer.service';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
+import {debounceTime, filter, fromEvent} from 'rxjs';
+import {TypedArray} from 'pdfjs-dist/types/src/display/api';
+
 @Component({
   selector: 'lib-pdf-viewer',
   standalone: true,
@@ -35,7 +37,7 @@ import { debounceTime, filter, fromEvent } from 'rxjs';
 })
 export class PdfViewerComponent implements OnInit, OnDestroy, AfterViewChecked {
   title = input<string>();
-  src = input.required<string>();
+  src = input.required<string | TypedArray>();
   private isVisible = false;
   private isInitialized = false;
 
@@ -69,10 +71,7 @@ export class PdfViewerComponent implements OnInit, OnDestroy, AfterViewChecked {
 
   ngOnInit(): void {
     console.log('PdfViewerComponent OnINIT');
-//assign(PDFJS, 'verbosity', PDFJS.VerbosityLevel.INFOS);
-    //this.initEventBus()
     this.setupResizeListener();
-    //this.pdfViewerService.setupViewer(this.pdfContainer);
   }
   ngAfterViewChecked() {
     if (this.isInitialized) {
@@ -94,7 +93,7 @@ export class PdfViewerComponent implements OnInit, OnDestroy, AfterViewChecked {
     }
 
   }
-  /* private initialize(): void {
+  /* private initialize(): void {ß
     if (isSSR() || !this.isVisible) {
       return;
     }
@@ -112,11 +111,13 @@ export class PdfViewerComponent implements OnInit, OnDestroy, AfterViewChecked {
     }
   }
   private loadPDF() {
+    console.log('PdfViewerComponent loadPDF',this.src());
     this.pdfViewerService.loadPdf(
       this.src(),
       this.pdfContainer
     );
   }
+
   private setupResizeListener(): void {
     if (isSSR()) {
       return;

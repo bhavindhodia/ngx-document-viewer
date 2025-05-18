@@ -1,7 +1,8 @@
 import { ZoomScale } from "../../pdf-viewer/pdf-viewer/utils/typings";
+import {TypedArray} from 'pdfjs-dist/types/src/display/api';
 
 export abstract class ResourceLoader {
-  protected _src: string | undefined = undefined;
+  protected _src: string | TypedArray = '';
   protected _rotation = 0;
   protected _zoom = 1.0;
   protected _zoomScale: ZoomScale = 'page-width';
@@ -11,7 +12,12 @@ export abstract class ResourceLoader {
   protected _fitToPage = false;
   protected _showBorders = true;
 
-
+  set src(value:string | TypedArray){
+    this._src=value
+  }
+  get src(){
+    return this._src;
+  }
   //Rotate content
   // Should be multiple of 90
   set rotation(value: number) {
