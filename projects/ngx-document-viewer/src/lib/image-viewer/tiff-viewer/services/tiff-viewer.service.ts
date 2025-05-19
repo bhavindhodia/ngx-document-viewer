@@ -5,12 +5,15 @@ import {switchMap} from 'rxjs/operators';
 import {PDFDocument} from 'pdf-lib';
 import * as UTIF from 'utif2';
 import {ResourceLoader} from 'ngx-document-viewer/src/lib/shared/model/resource-loader';
+import {ResourceLoaderService} from '@ngx-document-viewer';
+import {LoadingProgressStatus} from 'ngx-document-viewer/src/lib/pdf-viewer/pdf-viewer/utils/typings';
 
 @Injectable({
   providedIn: 'root'
 })
 export class TiffViewerService  extends ResourceLoader{
   private http = inject(HttpClient);
+  private _resource = inject(ResourceLoaderService);
   constructor(
     @Optional() @SkipSelf() tiffViewerService:TiffViewerService
   ) {
@@ -22,6 +25,7 @@ export class TiffViewerService  extends ResourceLoader{
   /* Converts tiff to png Image data and writes that Image data to canvas to PDF*/
   convertTiffToPdf(url: string): Observable<Uint8Array> {
     this.src = url
+    this._resource.startLoading()
     return this.http.get(url, { responseType: 'arraybuffer' }).pipe(
       switchMap(async (tiffBuffer: ArrayBuffer) => {
         const ifds = UTIF.decode(tiffBuffer);

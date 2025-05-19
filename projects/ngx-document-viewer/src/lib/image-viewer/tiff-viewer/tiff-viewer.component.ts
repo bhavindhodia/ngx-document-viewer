@@ -1,4 +1,4 @@
-import {Component, inject, input, OnChanges, OnDestroy, SimpleChanges} from '@angular/core';
+import {ChangeDetectionStrategy, Component, inject, input, OnChanges, OnDestroy, SimpleChanges} from '@angular/core';
 import {PdfViewerComponent} from 'ngx-document-viewer/src/lib/pdf-viewer';
 import {TiffViewerService} from 'ngx-document-viewer/src/lib/image-viewer/tiff-viewer/services/tiff-viewer.service';
 
@@ -9,7 +9,8 @@ import {TiffViewerService} from 'ngx-document-viewer/src/lib/image-viewer/tiff-v
     PdfViewerComponent
   ],
   template: `<lib-pdf-viewer [src]="_pdf"></lib-pdf-viewer>`,
-  styleUrl: './tiff-viewer.component.scss'
+  styleUrl: './tiff-viewer.component.scss',
+  changeDetection:ChangeDetectionStrategy.OnPush
 })
 export class TiffViewerComponent   implements OnDestroy, OnChanges {
   title = input<string>();

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import { ZoomScale } from '../../pdf-viewer/pdf-viewer/utils/typings';
-import {TypedArray} from 'pdfjs-dist/types/src/display/api';
+import {LoadingProgress, LoadingProgressStatus, ZoomScale} from '../../pdf-viewer/pdf-viewer/utils/typings';
+import {BehaviorSubject, distinctUntilChanged, Observable} from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
@@ -15,6 +15,72 @@ export class ResourceLoaderService {
   protected _stickToPage = false;
   protected _fitToPage = false;
   protected _showBorders = true;
+
+  progressInitialValue: LoadingProgress = {
+    loaded: 0,
+    total: 0,
+    percent: 0,
+    status: LoadingProgressStatus.STALE,
+  };
+
+  private loadingProgress_ = new BehaviorSubject<LoadingProgress>(
+    this.progressInitialValue
+  );
+  loadingProgress$: Observable<LoadingProgress> =
+    this.loadingProgress_.pipe(
+      distinctUntilChanged((a, b) =>
+        a.status === b.status &&
+        a.percent === b.percent
+      )
+    );
+  get currentProgress(): LoadingProgress {
+    return this.loadingProgress_.value;
+  }
+  updateProgress(loaded: number, total?: number): void {
+    const current = this.loadingProgress_.value;
+    const newTotal = total ?? current.total;
+    const percent = newTotal > 0
+      ? Math.min(Math.round((loaded / newTotal) * 100), 100)
+      : 0;
+
+    this.loadingProgress_.next({
+      loaded,
+      total: newTotal,
+      percent,
+      status: LoadingProgressStatus.LOADING
+    });
+  }
+  startLoading(total?: number): void {
+    this.loadingProgress_.next({
+      loaded: 0,
+      total: total || 0,
+      percent: 0,
+      status: LoadingProgressStatus.LOADING
+    });
+  }
+  completeLoading(message="Loading Complete"): void {
+    const current = this.loadingProgress_.value;
+    this.loadingProgress_.next({
+      loaded: current.total,
+      total: current.total,
+      percent: 100,
+      status: LoadingProgressStatus.COMPLETE,
+      message
+    });
+  }
+  setError(message="Something went wrong"): void {
+    const current = this.loadingProgress_.value;
+    this.loadingProgress_.next({
+      ...current,
+      status: LoadingProgressStatus.ERROR,
+      message
+    });
+  }
+
+  // Reset to initial state
+  reset(): void {
+    this.loadingProgress_.next(this.progressInitialValue);
+  }
 
   set src(value: string) {
     this._src = value;

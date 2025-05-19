@@ -7,12 +7,11 @@ import {
 } from '@angular/core';
 import { NavbarComponent } from '../navbar/navbar.component';
 import {
-  DocumentViewerComponent as LibDocumentViewer,
+  DocumentViewerComponent as LibDocumentViewer, ResourceLoaderService,
   ToolbarService,
 } from '@ngx-document-viewer';
 import { AsyncPipe, JsonPipe } from '@angular/common';
 import { PdfViewerService } from '@ngx-document-viewer';
-import { ActivatedRoute, Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 
 @Component({
@@ -30,9 +29,9 @@ import { ButtonModule } from 'primeng/button';
 })
 export class DocumentViewerComponent implements OnInit, AfterViewInit {
   private _toolbarService = inject(ToolbarService);
-  pdfViewerService = inject(PdfViewerService);
+  resourceLoader = inject(ResourceLoaderService);
   documentUrl = signal<string>('');
-  getServiceStatus$ = this.pdfViewerService.loadingProgress$;
+  getServiceStatus$ = this.resourceLoader.loadingProgress$;
   currentIndex = 0;
 
   files = [

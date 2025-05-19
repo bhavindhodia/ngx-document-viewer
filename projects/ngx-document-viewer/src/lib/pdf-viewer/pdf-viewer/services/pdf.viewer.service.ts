@@ -40,18 +40,7 @@ export class PdfViewerService extends ResourceLoader {
   destroy$ = inject(DestroyRef);
   _resource = inject(ResourceLoaderService);
   // Subjects
-  progressInitialValue: LoadingProgress = {
-    loaded: 0,
-    total: 0,
-    percent: 0,
-    status: LoadingProgressStatus.STALE,
-  };
 
-  private loadingProgress_ = new BehaviorSubject<LoadingProgress>(
-    this.progressInitialValue
-  );
-  loadingProgress$: Observable<LoadingProgress> =
-    this.loadingProgress_.asObservable();
   pageInit_ = new BehaviorSubject<CustomEvent | null>(null);
   pageInit$ = this.pageInit_.asObservable();
 
@@ -133,7 +122,9 @@ export class PdfViewerService extends ResourceLoader {
     this.clear();
     //this._loadingTask = getDocument({ url });
     this._loadingTask = getDocument(url);
-    this.setLoadingProgress();
+    if(typeof url === 'string'){
+      this.setLoadingProgress();
+    }
     from(this._loadingTask!.promise as Promise<PDFDocumentProxy>)
       .pipe(takeUntilDestroyed(this.destroy$))
       .subscribe({
@@ -227,10 +218,9 @@ export class PdfViewerService extends ResourceLoader {
       });
   }
   private setLoadingProgress(): void {
-
     this._loadingTask.onProgress = (progressData: PDFProgressData) => {
       const percent = (progressData.loaded / progressData.total) * 100;
-      this.loadingProgress_.next({
+      this._resource.loadingProgress_.next({
         loaded: progressData.loaded,
         total: progressData.total,
         percent: Math.round(percent),
