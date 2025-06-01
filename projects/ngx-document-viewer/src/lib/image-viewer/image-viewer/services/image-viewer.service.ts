@@ -1,28 +1,46 @@
-import {DestroyRef, inject, Injectable, NgZone} from '@angular/core';
-import {ResourceLoader} from '../../../shared/model/resource-loader';
-import {Canvas, FabricImage, Point} from 'fabric'
+import {computed, DestroyRef, effect, inject, Injectable, NgZone} from '@angular/core';
+import {Canvas, FabricImage, Point,Group,util} from 'fabric'
+
 import {debounceTime} from 'rxjs/operators';
 import {fromEvent} from 'rxjs';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
+import {ResourceLoaderService} from '@ngx-document-viewer';
 
 
 @Injectable({
   providedIn: 'root',
 })
-export class ImageViewerService extends ResourceLoader {
-  private static CSS_UNITS = 96.0 / 72.0;
+export class ImageViewerService  {
   private static CANVAS_ID = 'fabricImageSurface'
   private _zone = inject(NgZone)
 
   private canvas?: Canvas | null;
   private image?:FabricImage;
   private destroy$ = inject(DestroyRef);
+  private _resource = inject(ResourceLoaderService)
+  //private readonly zoom = computed(() => this._resource.zoom());
+  //private readonly rotation = computed(() => this._resource.rotation());
   constructor() {
-    super();
     fromEvent(window, 'resize')
       .pipe(takeUntilDestroyed(this.destroy$), debounceTime(500))
       .subscribe(() => this.setImage());
+    effect(() => {
+      const rotation = this._resource.rotation()
+      if(this.image && this.canvas){
+        console.log("Image Viewer Current Rotation")
+        this.clearCanvas();
+        this.image.set('angle',rotation)
+        this.canvas.add(this.image);
+        this.canvas.centerObject(this.image)
+        this.canvas.setActiveObject(this.image)
+        this.canvas.renderAll()
+      }
+    });
+    effect(() => {
+        this.zoomToContent(this._resource.zoom());
+    });
   }
+
 
   private initializeCanvas(canvasId: string): void {
     this._zone.runOutsideAngular(() => {
@@ -39,10 +57,20 @@ export class ImageViewerService extends ResourceLoader {
       console.warn('Canvas is not initialized.');
       this.initializeCanvas(ImageViewerService.CANVAS_ID)
     }
+    this._resource.startLoading()
     FabricImage.fromURL(imageUrl).then((img) => {
       this.image = img
       this.setImage()
-    });
+      const {height,width} = this.image.getOriginalSize();
+      const size = height * width
+      this._resource.updateProgress(size,size)
+    }).catch(
+      (error)=>{
+        console.error("IMG",error);
+        this._resource.setError("Image Service")
+        return error
+      }
+    ).finally(() => this._resource.completeLoading());
   }
 
   setImage(){
@@ -77,9 +105,9 @@ export class ImageViewerService extends ResourceLoader {
       hasBorders: false,       // No border box
       lockMovementX: true,     // Lock horizontal movement
       lockMovementY: true,     // Lock vertical movement
-      lockScalingX: true,      // Lock horizontal scaling
-      lockScalingY: true,      // Lock vertical scaling
-      lockRotation: true
+      lockScalingX: false,      // Lock horizontal scaling
+      lockScalingY: false,      // Lock vertical scaling
+      lockRotation: false
     })
 
     this.clearCanvas();
@@ -108,18 +136,28 @@ export class ImageViewerService extends ResourceLoader {
     }
   }
 
-  rotate() {
-    //this.angle = (this.angle + 90) % 360;
-    /* this.drawCanvas(); */
-  }
-
-  zoomIn() {
-    this._zoom *= 1.1;
-    /* this.drawCanvas(); */
-  }
-
-  zoomOut() {
-    this._zoom /= 1.1;
-    /* this.drawCanvas(); */
+  zoomToContent(zoom:number){
+    if (!this.canvas ||this.canvas.getObjects().length < 1) {
+      return;
+    }
+    this.canvas.setZoom(1);
+    const group = new Group(this.canvas.getObjects());
+    const x = (group.left + (group.width / 2)) - (this.canvas.width / 2);
+    const y = (group.top + (group.height / 2)) - (this.canvas.height / 2);
+    this.canvas.absolutePan(new Point(x,y));
+  /*  const heightDist = this.canvas.getHeight() - group.height;
+    const widthDist = this.canvas.getWidth() - group.width;
+    let groupDimension = 0;
+    let canvasDimension = 0;
+    if (heightDist < widthDist) {
+      groupDimension = group.height;
+      canvasDimension = this.canvas.getHeight();
+    } else {
+      groupDimension = group.width;
+      canvasDimension = this.canvas.getWidth();
+    }*/
+    const point = new Point(this.canvas.width/2,this.canvas
+      .height/2)
+    this.canvas.zoomToPoint(point, zoom);
   }
 }

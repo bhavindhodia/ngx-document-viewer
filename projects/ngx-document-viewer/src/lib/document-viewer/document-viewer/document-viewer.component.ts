@@ -62,11 +62,16 @@ export class DocumentViewerComponent implements OnInit, AfterViewInit {
       this.componentList = this._dynamicComponentService.setComponents({
         src: this.documentUrl(),
       });
-      this._resourceLoaderService.src = this.documentUrl();
+      this._resourceLoaderService.restResource()
+      this._resourceLoaderService.setSrc(this.documentUrl())
+    },{
+      allowSignalWrites:true
     });
   }
   ngOnInit(): void {}
-  ngAfterViewInit(): void {}
+  ngAfterViewInit(): void {
+
+  }
 
   private getExtensionFromUrl(
     url: string

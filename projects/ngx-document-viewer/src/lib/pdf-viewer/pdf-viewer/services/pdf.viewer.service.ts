@@ -1,5 +1,5 @@
 import {
-  DestroyRef,
+  DestroyRef, effect,
   ElementRef,
   inject,
   Injectable,
@@ -31,7 +31,7 @@ import { ResourceLoaderService } from 'ngx-document-viewer/src/lib/shared/servic
 @Injectable({
   providedIn: 'root',
 })
-export class PdfViewerService extends ResourceLoader {
+export class PdfViewerService  {
   //Static Values
   private static CSS_UNITS = 96.0 / 72.0;
   private static BORDER_WIDTH = 9;
@@ -88,11 +88,17 @@ export class PdfViewerService extends ResourceLoader {
     //@Inject(DOCUMENT) private document: Document
     //private be: PDFJSViewer.EventBus
   ) {
-    super();
     if (pdfViewerService) {
       throw new Error('Instance of this service already exist');
     }
     this.initializeServices();
+
+    effect(() => {
+      if((this._resource.zoom()) && this.pdfViewer){
+        console.log("PDF VIEWER SERVICE EFFECT",this._resource.zoom())
+        this.pdfViewer.currentScale = this._resource.zoom()
+      }
+    });
   }
   /*
   To Open link in PDF
@@ -116,15 +122,13 @@ export class PdfViewerService extends ResourceLoader {
     url: string | URL | TypedArray | ArrayBuffer | DocumentInitParameters,
     canvas: ElementRef<HTMLDivElement>
   ): PDFDocumentProxy | null {
-    console.log('PDFVIIEWER SERVICE URL', this.src);
+    console.log('PDFVIIEWER SERVICE URL', url);
     //this.loadingProgress_.next(this.progressInitialValue);
     this.setupViewer(canvas);
     this.clear();
     //this._loadingTask = getDocument({ url });
     this._loadingTask = getDocument(url);
-    if(typeof url === 'string'){
-      this.setLoadingProgress();
-    }
+    this.setLoadingProgress();
     from(this._loadingTask!.promise as Promise<PDFDocumentProxy>)
       .pipe(takeUntilDestroyed(this.destroy$))
       .subscribe({
@@ -147,16 +151,16 @@ export class PdfViewerService extends ResourceLoader {
     this._page = this.getValidPageNumber(this._page);
 
     if (
-      this._rotation !== 0 ||
-      this.pdfViewer.pagesRotation !== this._rotation
+      this._resource.rotation() !== 0 ||
+      this.pdfViewer.pagesRotation !== this._resource.rotation()
     ) {
       // wait until at least the first page is available.
       this.pdfViewer.firstPagePromise?.then(
-        () => (this.pdfViewer.pagesRotation = this._rotation)
+        () => (this.pdfViewer.pagesRotation = this._resource.rotation())
       );
     }
 
-    if (this._stickToPage) {
+    if (this._resource.stickToPage()) {
       setTimeout(() => {
         this.pdfViewer.currentPageNumber = this._page;
       });
@@ -181,20 +185,20 @@ export class PdfViewerService extends ResourceLoader {
       .pipe(takeUntilDestroyed(this.destroy$))
       .subscribe({
         next: (page: PDFPageProxy) => {
-          const rotation = this.rotation + page.rotate;
+          const rotation = this._resource.rotation() + page.rotate;
           const viewportWidth =
             page.getViewport({
-              scale: this._zoom,
+              scale: this._resource.zoom(),
               rotation,
             }).width * PdfViewerService.CSS_UNITS;
-          let scale = this._zoom;
+          let scale = this._resource.zoom();
           let stickToPage = true;
 
           console.log('viewPort', viewportWidth);
           // Scale the document when it shouldn't be in original size or doesn't fit into the viewport
           if (
-            !this._originalSize ||
-            (this._fitToPage &&
+            !this._resource.originalSize() ||
+            (this._resource.fitToPage() &&
               viewportWidth >
                 canvas.nativeElement.querySelector('div')!.clientWidth)
           ) {
@@ -205,7 +209,7 @@ export class PdfViewerService extends ResourceLoader {
               viewPort.width,
               viewPort.height
             );
-            stickToPage = !this._stickToPage;
+            stickToPage = !this._resource.stickToPage();
           }
           this.pdfViewer.currentScale = scale;
           if (stickToPage) {
@@ -219,19 +223,10 @@ export class PdfViewerService extends ResourceLoader {
   }
   private setLoadingProgress(): void {
     this._loadingTask.onProgress = (progressData: PDFProgressData) => {
-      const percent = (progressData.loaded / progressData.total) * 100;
-      this._resource.loadingProgress_.next({
-        loaded: progressData.loaded,
-        total: progressData.total,
-        percent: Math.round(percent),
-        status:
-          progressData.loaded === progressData.total
-            ? LoadingProgressStatus.COMPLETE
-            : LoadingProgressStatus.LOADING,
-        message: `Loading PDF: ${Math.round(percent)}%`,
-      });
+      //console.log("progressData",progressData)
+      this._resource.updateProgress(progressData.loaded,progressData.total)
       if (progressData.loaded === progressData.total) {
-        //this.loadingProgress_.complete();
+        this._resource.completeLoading()
 
       }
     };
@@ -241,7 +236,7 @@ export class PdfViewerService extends ResourceLoader {
     viewportWidth: number,
     viewportHeight: number
   ) {
-    const borderSize = this._showBorders
+    const borderSize = this._resource.showBorders()
       ? 2 * PdfViewerService.BORDER_WIDTH
       : 0;
 
@@ -257,7 +252,7 @@ export class PdfViewerService extends ResourceLoader {
     }
 
     let ratio = 1;
-    switch (this._zoomScale) {
+    switch (this._resource.zoomScale()) {
       case 'page-fit':
         ratio = Math.min(
           pdfContainerHeight / viewportHeight,
@@ -273,7 +268,7 @@ export class PdfViewerService extends ResourceLoader {
         break;
     }
 
-    return (this._zoom * ratio) / PdfViewerService.CSS_UNITS;
+    return (this._resource.zoom() * ratio) / PdfViewerService.CSS_UNITS;
   }
   public setupViewer(canvas: ElementRef<HTMLDivElement>) {
     console.log('PdfViewerService setupViewer');
@@ -301,7 +296,7 @@ export class PdfViewerService extends ResourceLoader {
     return {
       eventBus: this.eventBus,
       container: canvas.nativeElement.querySelector('div')!,
-      removePageBorders: this.showBorders,
+      removePageBorders: this._resource.showBorders(),
       linkService: this.pdfLinkService,
       textLayerMode: RenderTextMode.DISABLED,
       findController: this.pdfFindController,

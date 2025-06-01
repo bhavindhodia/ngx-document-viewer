@@ -1,15 +1,13 @@
 import {
-  AfterViewChecked,
+  AfterViewInit,
   ChangeDetectionStrategy,
   Component,
-  DestroyRef,
+  DestroyRef, effect,
   ElementRef,
   inject,
   input,
   NgZone,
   OnDestroy,
-  OnInit,
-  SimpleChanges,
 } from '@angular/core';
 import {assign, isSSR} from './utils/helpers';
 import * as PDFJS from 'pdfjs-dist';
@@ -18,6 +16,7 @@ import {PdfViewerService} from './services/pdf.viewer.service';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {debounceTime, filter, fromEvent} from 'rxjs';
 import {TypedArray} from 'pdfjs-dist/types/src/display/api';
+import {ResourceLoaderService} from 'ngx-document-viewer/src/lib/shared';
 
 @Component({
   selector: 'lib-pdf-viewer',
@@ -35,17 +34,16 @@ import {TypedArray} from 'pdfjs-dist/types/src/display/api';
   styleUrl: './pdf-viewer.component.scss',
   changeDetection:ChangeDetectionStrategy.OnPush
 })
-export class PdfViewerComponent implements OnInit, OnDestroy, AfterViewChecked {
+export class PdfViewerComponent implements  OnDestroy,AfterViewInit {
   title = input<string>();
   src = input.required<string | TypedArray>();
-  private isVisible = false;
-  private isInitialized = false;
 
   private destroy$ = inject(DestroyRef);
   private pdfViewerService = inject(PdfViewerService);
+  private resourceLoaderService = inject(ResourceLoaderService);
   private ngZone = inject(NgZone);
-  private pdfContainer: ElementRef<HTMLDivElement> = inject(ElementRef);
-
+  private pdfContainer!: ElementRef<HTMLDivElement>;
+  private host: ElementRef<HTMLDivElement> = inject<ElementRef<HTMLDivElement>>(ElementRef)
   constructor() {
     /* Get PdfWorker  */
     let pdfWorkerSrc: string;
@@ -67,54 +65,34 @@ export class PdfViewerComponent implements OnInit, OnDestroy, AfterViewChecked {
     }
 
     assign(GlobalWorkerOptions, 'workerSrc', pdfWorkerSrc);
+
+    effect(() => {
+      if (!isSSR() && !!this.src().length) {
+        this.loadPDF();
+      }
+    });
   }
 
-  ngOnInit(): void {
-    console.log('PdfViewerComponent OnINIT');
+  ngAfterViewInit(): void {
+/*    this.pdfContainer = new ElementRef<HTMLDivElement>(
+      this.host.nativeElement.querySelector('#pdf-viewer-container') as HTMLDivElement
+    );
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          this.loadPDF('observer');
+        }
+      });
+    });
+    observer.observe(this.pdfContainer.nativeElement);*/
     this.setupResizeListener();
   }
-  ngAfterViewChecked() {
-    if (this.isInitialized) {
-      return;
-    }
-    const offset =
-    this.pdfContainer.nativeElement.querySelector('div')!.offsetParent;
 
-    if (this.isVisible === true && offset == null) {
-      this.isVisible = false;
-      return;
-    }
-    if (this.isVisible === false && offset != null) {
-      console.log('PdfViewerComponent VIEW CHECKED');
-      this.isVisible = true;
-      setTimeout(() => {
-        this.ngOnChanges({ src: this.src } as any);
-      });
-    }
-
-  }
-  /* private initialize(): void {ß
-    if (isSSR() || !this.isVisible) {
-      return;
-    }
-
-    this.isInitialized = true;
-    this.pdfViewerService.setupViewer(this.pdfContainer);
-  } */
-  ngOnChanges(changes: SimpleChanges) {
-    if (isSSR() || !this.pdfContainer.nativeElement.offsetParent) {
-      return;
-    }
-    if ('src' in changes) {
-      console.log('PdfViewerComponent ONCHANGE',changes);
-      this.loadPDF();
-    }
-  }
   private loadPDF() {
     console.log('PdfViewerComponent loadPDF',this.src());
     this.pdfViewerService.loadPdf(
       this.src(),
-      this.pdfContainer
+      this.host
     );
   }
 
@@ -128,7 +106,7 @@ export class PdfViewerComponent implements OnInit, OnDestroy, AfterViewChecked {
           debounceTime(500),
           filter(
             () =>
-              this.pdfViewerService.canAutoResize &&
+              this.resourceLoaderService.canAutoResize() &&
               !!this.pdfViewerService.pdfDocument
           ),
           takeUntilDestroyed(this.destroy$)

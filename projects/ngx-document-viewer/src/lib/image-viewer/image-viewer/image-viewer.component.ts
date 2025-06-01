@@ -1,4 +1,4 @@
-import {Component, inject, input, OnChanges, OnDestroy, SimpleChanges} from '@angular/core';
+import {Component, effect, inject, input, OnChanges, OnDestroy, SimpleChanges} from '@angular/core';
 import {ImageViewerService} from './services/image-viewer.service';
 
 @Component({
@@ -10,16 +10,18 @@ import {ImageViewerService} from './services/image-viewer.service';
   styleUrl: './image-viewer.component.scss',
 })
 export class ImageViewerComponent
-  implements OnDestroy, OnChanges {
+  implements OnDestroy {
   title = input<string>();
   src = input.required<string>();
   private _imageService = inject(ImageViewerService);
 
-  ngOnChanges(changes: SimpleChanges) {
-    if ('src' in changes) {
-      console.log('ImageViewerComponent ONCHANGE', changes);
-      this._imageService.loadImageToCanvas(this.src())
-    }
+  constructor() {
+    effect(() => {
+      if (!!this.src().length) {
+        console.log('ImageViewerComponent Effect',this.src());
+        this._imageService.loadImageToCanvas(this.src())
+      }
+    });
   }
 
   ngOnDestroy(): void {

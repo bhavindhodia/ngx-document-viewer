@@ -57,7 +57,16 @@ export class TiffViewerService  extends ResourceLoader{
             height: pageHeight,
           });
         }
-        return await pdfDoc.save();
+        return await pdfDoc.save().then(
+          (pdfBytes:Uint8Array) => {
+            this._resource.updateProgress(pdfBytes.length,pdfBytes.length)
+            return pdfBytes;
+          }
+        )
+          .catch((err) =>{
+            this._resource.setError(err)
+            return err
+          });
       })
     );
   }

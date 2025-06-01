@@ -1,20 +1,28 @@
-import { Injectable } from '@angular/core';
+import {computed, Injectable, signal} from '@angular/core';
 import {LoadingProgress, LoadingProgressStatus, ZoomScale} from '../../pdf-viewer/pdf-viewer/utils/typings';
 import {BehaviorSubject, distinctUntilChanged, Observable} from 'rxjs';
+import {TypedArray} from 'pdfjs-dist/types/src/display/api';
 
 @Injectable({
   providedIn: 'root',
 })
 export class ResourceLoaderService {
-  protected _src: string = '';
-  protected _rotation = 0;
-  protected _zoom = 1.0;
-  protected _zoomScale: ZoomScale = 'page-width';
-  protected _canAutoResize = true;
-  protected _originalSize = true;
-  protected _stickToPage = false;
-  protected _fitToPage = false;
-  protected _showBorders = true;
+  private _src = signal<string|TypedArray>('');
+  private _zoom = signal<number>(1.0);
+  private _rotation = signal<number>(0);
+  private _zoomScale = signal<ZoomScale>('page-width');
+  private _stickToPage = signal<boolean>(false);
+  private _originalSize = signal<boolean>(true);
+  private _canAutoResize = signal<boolean>(true);
+  private _fitToPage = signal<boolean>(false);
+  private _showBorders = signal<boolean>(true);
+
+  restResource(){
+    this.setSrc('')
+    this.setZoom(1.0)
+    this.setRotation(0)
+    this.setZoomScale('page-width')
+  }
 
   progressInitialValue: LoadingProgress = {
     loaded: 0,
@@ -82,53 +90,51 @@ export class ResourceLoaderService {
     this.loadingProgress_.next(this.progressInitialValue);
   }
 
-  set src(value: string) {
-    this._src = value;
-  }
-  get src(){
-    return this._src;
+  readonly src = computed<string|TypedArray>(() => this._src())
+  setSrc(value: string) {
+    this._src.set(value);
   }
   //Rotate content
+  readonly rotation = computed<number>(() => this._rotation())
   // Should be multiple of 90
-  set rotation(value: number) {
-    if (!(typeof value === 'number' && value % 90 === 0)) {
+  setRotation(value: number) {
+    if (!(value % 90 === 0)) {
       console.warn('Invalid pages rotation angle.');
       return;
     }
-    this._rotation = value;
+    this._rotation.set(value);
   }
   //Set zoom value
-  public set zoom(zoomLevel: number) {
-    if (zoomLevel <= 0) return;
-    this._zoom = zoomLevel;
+  readonly zoom = computed<number>(() => this._zoom())
+  setZoom(value: number) {
+    if (value <= 0.25 || value >=4) return;
+    this._zoom.set(value);
   }
 
   //Zoom scale for canvas dimension
-  //Valid values are "page-height" | "page-fit" | "page-width"
-  set zoomScale(value: ZoomScale) {
-    this._zoomScale = value;
-  }
-  //AutoResize
-  set canAutoResize(value: boolean) {
-    this._canAutoResize = Boolean(value);
+  readonly zoomScale = computed<ZoomScale>(() => this._zoomScale())
+  setZoomScale(value: ZoomScale) {
+    this._zoomScale.set(value);
   }
 
-  // Show original size for PDF
-  set originalSize(value: boolean) {
-    this._originalSize = Boolean(value);
+  readonly canAutoResize = computed<boolean>(() => this._canAutoResize())
+  setCanAutoResize(value: boolean) {
+    this._canAutoResize.set(value);
   }
-
-  set stickToPage(value: boolean) {
-    this._stickToPage = Boolean(value);
+  readonly originalSize = computed<boolean>(() => this._originalSize())
+  setOriginalSize(value: boolean) {
+    this._originalSize.set(value);
   }
-
-  // Fit PDF to clients viewport
-  set fitToPage(value: boolean) {
-    this._fitToPage = Boolean(value);
+  readonly stickToPage = computed<boolean>(() => this._stickToPage())
+  setStickToPage(value: boolean) {
+    this._stickToPage.set(value);
   }
-
-  //Show border between PDF pages
-  set showBorders(value: boolean) {
-    this._showBorders = Boolean(value);
+  readonly fitToPage = computed<boolean>(() => this._fitToPage())
+  setFitToPage(value: boolean) {
+    this._fitToPage.set(value);
+  }
+  readonly showBorders = computed<boolean>(() => this._showBorders())
+  setShowBorders(value: boolean) {
+    this._showBorders.set(value);
   }
 }
