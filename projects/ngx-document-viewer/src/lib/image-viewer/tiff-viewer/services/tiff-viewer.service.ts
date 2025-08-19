@@ -1,12 +1,11 @@
-import {inject, Injectable, Optional, SkipSelf} from '@angular/core';
-import {HttpClient} from '@angular/common/http';
-import {Observable} from 'rxjs';
-import {switchMap} from 'rxjs/operators';
-import {PDFDocument} from 'pdf-lib';
+import { HttpClient } from '@angular/common/http';
+import { inject, Injectable, Optional, SkipSelf } from '@angular/core';
+import { ResourceLoaderService } from '@ngx-document-viewer';
+import { ResourceLoader } from 'ngx-document-viewer/src/lib/shared/model/resource-loader';
+import { PDFDocument } from 'pdf-lib';
+import { Observable } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
 import * as UTIF from 'utif2';
-import {ResourceLoader} from 'ngx-document-viewer/src/lib/shared/model/resource-loader';
-import {ResourceLoaderService} from '@ngx-document-viewer';
-import {LoadingProgressStatus} from 'ngx-document-viewer/src/lib/pdf-viewer/pdf-viewer/utils/typings';
 
 @Injectable({
   providedIn: 'root'
@@ -59,7 +58,7 @@ export class TiffViewerService  extends ResourceLoader{
         }
         return await pdfDoc.save().then(
           (pdfBytes:Uint8Array) => {
-            this._resource.updateProgress(pdfBytes.length,pdfBytes.length)
+            this._resource.updateProgress(pdfBytes.length.toString(),pdfBytes.length.toString())
             return pdfBytes;
           }
         )

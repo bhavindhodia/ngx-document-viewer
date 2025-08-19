@@ -1,7 +1,8 @@
-import { fromEvent, Subject } from 'rxjs';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import type { EventBus } from 'pdfjs-dist/web/pdf_viewer.mjs';
 import { DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ResourceLoaderService } from '@ngx-document-viewer';
+import type { EventBus } from 'pdfjs-dist/web/pdf_viewer.mjs';
+import { fromEvent } from 'rxjs';
 
 // interface EventBus {
 //   on(eventName: string, listener: Function): void;
@@ -12,15 +13,20 @@ import { DestroyRef } from '@angular/core';
 //   _off(eventName: any, listener: any, options?: null): void;
 // }
 
-export function createEventBus(pdfJsViewer: any, destroy$: DestroyRef) {
+export function createEventBus(
+  pdfJsViewer: any,
+  destroy$: DestroyRef,
+  resourceLoader: ResourceLoaderService
+) {
   const globalEventBus: EventBus = new pdfJsViewer.EventBus();
-  attachDOMEventsToEventBus(globalEventBus, destroy$);
+  attachDOMEventsToEventBus(globalEventBus, destroy$, resourceLoader);
   return globalEventBus;
 }
 
 function attachDOMEventsToEventBus(
   eventBus: EventBus,
-  destroy$: DestroyRef
+  destroy$: DestroyRef,
+  resourceLoader: ResourceLoaderService
 ): void {
   fromEvent(eventBus, 'documentload')
     .pipe(takeUntilDestroyed(destroy$))
@@ -37,13 +43,11 @@ function attachDOMEventsToEventBus(
       );
     });
 
-  fromEvent(eventBus, 'pagechanging')
+ fromEvent(eventBus, 'pagechanging')
     .pipe(takeUntilDestroyed(destroy$))
     .subscribe(({ pageNumber, source }: any) => {
-      const event = document.createEvent('UIEvents') as any;
-      event.initEvent('pagechanging', true, true);
-      //tslint:disable:no-string-literal
-      event['pageNumber'] = pageNumber;
+      const event = new CustomEvent('pagechanging',{detail:{pageNumber,source}})
+      resourceLoader.setPage(pageNumber)
       source.container.dispatchEvent(event);
     });
 

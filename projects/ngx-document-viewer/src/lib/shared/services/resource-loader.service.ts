@@ -2,6 +2,7 @@ import {computed, Injectable, signal} from '@angular/core';
 import {LoadingProgress, LoadingProgressStatus, ZoomScale} from '../../pdf-viewer/pdf-viewer/utils/typings';
 import {BehaviorSubject, distinctUntilChanged, Observable} from 'rxjs';
 import {TypedArray} from 'pdfjs-dist/types/src/display/api';
+import { niceBytes } from '@ngx-document-viewer';
 
 @Injectable({
   providedIn: 'root',
@@ -16,17 +17,22 @@ export class ResourceLoaderService {
   private _canAutoResize = signal<boolean>(true);
   private _fitToPage = signal<boolean>(false);
   private _showBorders = signal<boolean>(true);
+  private _page = signal<number>(1);
+  private _totalPage = signal<number>(1);
 
   restResource(){
+    console.log('RESET RESOURCE');
     this.setSrc('')
     this.setZoom(1.0)
     this.setRotation(0)
     this.setZoomScale('page-width')
+    this.setPage(1)
+    //this.setTotalPage(1)
   }
 
   progressInitialValue: LoadingProgress = {
-    loaded: 0,
-    total: 0,
+    loaded: "0",
+    total: "0",
     percent: 0,
     status: LoadingProgressStatus.STALE,
   };
@@ -44,24 +50,28 @@ export class ResourceLoaderService {
   get currentProgress(): LoadingProgress {
     return this.loadingProgress_.value;
   }
-  updateProgress(loaded: number, total?: number): void {
+  updateProgress(loaded: string, total?: string): void {
     const current = this.loadingProgress_.value;
-    const newTotal = total ?? current.total;
+    const currentTotal = typeof current.total === 'string'
+        ? parseInt(current.total)
+        : current.total
+    const newTotal =
+      Number(total ?? current.total);
     const percent = newTotal > 0
-      ? Math.min(Math.round((loaded / newTotal) * 100), 100)
+      ? Math.min(Math.round((parseInt(loaded) / newTotal) * 100), 100)
       : 0;
 
     this.loadingProgress_.next({
       loaded,
-      total: newTotal,
+      total: String(newTotal),
       percent,
       status: LoadingProgressStatus.LOADING
     });
   }
-  startLoading(total?: number): void {
+  startLoading(total?: string): void {
     this.loadingProgress_.next({
-      loaded: 0,
-      total: total || 0,
+      loaded: '0',
+      total: total || '0',
       percent: 0,
       status: LoadingProgressStatus.LOADING
     });
@@ -69,11 +79,11 @@ export class ResourceLoaderService {
   completeLoading(message="Loading Complete"): void {
     const current = this.loadingProgress_.value;
     this.loadingProgress_.next({
-      loaded: current.total,
-      total: current.total,
+      loaded: niceBytes(current.total),
+      total: niceBytes(current.total),
       percent: 100,
       status: LoadingProgressStatus.COMPLETE,
-      message
+      message,
     });
   }
   setError(message="Something went wrong"): void {
@@ -136,5 +146,15 @@ export class ResourceLoaderService {
   readonly showBorders = computed<boolean>(() => this._showBorders())
   setShowBorders(value: boolean) {
     this._showBorders.set(value);
+  }
+  readonly page = computed<number>(() => this._page())
+  setPage(value: number) {
+    if(value <= this.totalPage()){
+      this._page.set(value);
+    }
+  }
+  readonly totalPage = computed<number>(() => this._totalPage())
+  setTotalPage(value: number) {
+    this._totalPage.set(value);
   }
 }

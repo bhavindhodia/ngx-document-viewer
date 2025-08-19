@@ -35,13 +35,14 @@ export class DocumentViewerComponent implements OnInit, AfterViewInit {
   currentIndex = 0;
 
   files = [
+    'sample.pdf',
+    'policy.pdf',
     'samplejpeg.jpg',
     'img1.jpg',
     'multiPageTiff.tiff',
     'tiff1.tiff',
     'tiff5.tiff',
     'SamplePNG.png',
-    'sample.pdf',
     'example.pdf',
     'policy.pdf',
   ];

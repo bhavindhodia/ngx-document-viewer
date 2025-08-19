@@ -2,21 +2,23 @@ import {
   AfterViewInit,
   ChangeDetectionStrategy,
   Component,
-  DestroyRef, effect,
+  DestroyRef,
   ElementRef,
   inject,
   input,
   NgZone,
+  OnChanges,
   OnDestroy,
+  SimpleChanges
 } from '@angular/core';
-import {assign, isSSR} from './utils/helpers';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ResourceLoaderService } from 'ngx-document-viewer/src/lib/shared';
 import * as PDFJS from 'pdfjs-dist';
-import {GlobalWorkerOptions} from 'pdfjs-dist';
-import {PdfViewerService} from './services/pdf.viewer.service';
-import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
-import {debounceTime, filter, fromEvent} from 'rxjs';
-import {TypedArray} from 'pdfjs-dist/types/src/display/api';
-import {ResourceLoaderService} from 'ngx-document-viewer/src/lib/shared';
+import { GlobalWorkerOptions } from 'pdfjs-dist';
+import { TypedArray } from 'pdfjs-dist/types/src/display/api';
+import { debounceTime, filter, fromEvent } from 'rxjs';
+import { PdfViewerService } from './services/pdf.viewer.service';
+import { assign, isSSR } from './utils/helpers';
 
 @Component({
   selector: 'lib-pdf-viewer',
@@ -34,7 +36,7 @@ import {ResourceLoaderService} from 'ngx-document-viewer/src/lib/shared';
   styleUrl: './pdf-viewer.component.scss',
   changeDetection:ChangeDetectionStrategy.OnPush
 })
-export class PdfViewerComponent implements  OnDestroy,AfterViewInit {
+export class PdfViewerComponent implements  OnDestroy,AfterViewInit,OnChanges {
   title = input<string>();
   src = input.required<string | TypedArray>();
 
@@ -66,32 +68,36 @@ export class PdfViewerComponent implements  OnDestroy,AfterViewInit {
 
     assign(GlobalWorkerOptions, 'workerSrc', pdfWorkerSrc);
 
-    effect(() => {
-      if (!isSSR() && !!this.src().length) {
-        this.loadPDF();
-      }
-    });
   }
 
   ngAfterViewInit(): void {
-/*    this.pdfContainer = new ElementRef<HTMLDivElement>(
+    // this.loadPDF(this.src());
+    /*    this.pdfContainer = new ElementRef<HTMLDivElement>(
       this.host.nativeElement.querySelector('#pdf-viewer-container') as HTMLDivElement
-    );
-    const observer = new IntersectionObserver(entries => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          this.loadPDF('observer');
-        }
-      });
-    });
-    observer.observe(this.pdfContainer.nativeElement);*/
-    this.setupResizeListener();
-  }
+      );
+      const observer = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            this.loadPDF('observer');
+            }
+            });
+            });
+            observer.observe(this.pdfContainer.nativeElement);*/
+            this.setupResizeListener();
+          }
 
-  private loadPDF() {
-    console.log('PdfViewerComponent loadPDF',this.src());
+
+  ngOnChanges(changes: SimpleChanges): void{
+    if(!isSSR() && changes['src']){
+      console.log('CHANGES', changes);
+      this.loadPDF(this.src());
+    }
+
+  }
+  private loadPDF(src:string | TypedArray) {
+    //console.log('PdfViewerComponent loadPDF',this.src());
     this.pdfViewerService.loadPdf(
-      this.src(),
+      src,
       this.host
     );
   }

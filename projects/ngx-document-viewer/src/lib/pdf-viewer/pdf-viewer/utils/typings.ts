@@ -16,8 +16,8 @@ export enum LoadingProgressStatus {
   STALE = 'stale',
 }
 export interface LoadingProgress {
-  loaded: number;
-  total: number;
+  loaded:  string;
+  total:  string;
   percent: number;
   status: LoadingProgressStatus;
   message?: string;

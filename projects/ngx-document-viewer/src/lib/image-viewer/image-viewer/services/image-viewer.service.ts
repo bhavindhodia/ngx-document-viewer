@@ -1,10 +1,10 @@
-import {computed, DestroyRef, effect, inject, Injectable, NgZone} from '@angular/core';
-import {Canvas, FabricImage, Point,Group,util} from 'fabric'
+import { DestroyRef, effect, inject, Injectable, NgZone } from '@angular/core';
+import { Canvas, FabricImage, Group, Point } from 'fabric';
 
-import {debounceTime} from 'rxjs/operators';
-import {fromEvent} from 'rxjs';
-import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
-import {ResourceLoaderService} from '@ngx-document-viewer';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ResourceLoaderService } from '@ngx-document-viewer';
+import { fromEvent } from 'rxjs';
+import { debounceTime } from 'rxjs/operators';
 
 
 @Injectable({
@@ -63,7 +63,7 @@ export class ImageViewerService  {
       this.setImage()
       const {height,width} = this.image.getOriginalSize();
       const size = height * width
-      this._resource.updateProgress(size,size)
+      this._resource.updateProgress(size.toString(),size.toString())
     }).catch(
       (error)=>{
         console.error("IMG",error);

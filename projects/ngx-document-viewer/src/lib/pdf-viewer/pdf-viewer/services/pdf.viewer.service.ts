@@ -7,26 +7,25 @@ import {
   signal,
   SkipSelf,
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ResourceLoaderService } from 'ngx-document-viewer/src/lib/shared/services/resource-loader.service';
+import * as PDFJS from 'pdfjs-dist';
+import { getDocument } from 'pdfjs-dist';
 import {
+  DocumentInitParameters,
+  PDFDocumentLoadingTask,
   PDFDocumentProxy,
   PDFPageProxy,
-  PDFDocumentLoadingTask, TypedArray, DocumentInitParameters,
+  TypedArray,
 } from 'pdfjs-dist/types/src/display/api';
-import { getDocument } from 'pdfjs-dist';
-import * as PDFJS from 'pdfjs-dist';
-import * as PDFJSViewer from 'pdfjs-dist/web/pdf_viewer.mjs';
 import { EventBus, PDFViewerOptions } from 'pdfjs-dist/types/web/pdf_viewer';
+import * as PDFJSViewer from 'pdfjs-dist/web/pdf_viewer.mjs';
+import { BehaviorSubject, from, skipWhile } from 'rxjs';
 import { createEventBus } from '../utils/event-bus.utils';
-import { BehaviorSubject, from, Observable, skipWhile } from 'rxjs';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
-  LoadingProgress,
-  LoadingProgressStatus,
   PDFProgressData,
-  RenderTextMode,
+  RenderTextMode
 } from '../utils/typings';
-import { ResourceLoader } from 'ngx-document-viewer/src/lib/shared/model/resource-loader';
-import { ResourceLoaderService } from 'ngx-document-viewer/src/lib/shared/services/resource-loader.service';
 
 @Injectable({
   providedIn: 'root',
@@ -67,26 +66,9 @@ export class PdfViewerService  {
   get pdfDocument() {
     return this._pdf;
   }
-  //Page
-  private _page: number = 1;
-  get page(): number {
-    return this._page;
-  }
-  set page(pageNumber: number | string) {
-    pageNumber =
-      typeof pageNumber === 'string' ? parseInt(pageNumber, 10) : pageNumber;
-    const originalPage = pageNumber;
-    if (this._pdf) {
-      pageNumber = this.getValidPageNumber(pageNumber);
-    }
-    this._page = pageNumber;
-  }
 
-  myPdfContainer: HTMLDivElement | null = null;
   constructor(
     @Optional() @SkipSelf() pdfViewerService: PdfViewerService
-    //@Inject(DOCUMENT) private document: Document
-    //private be: PDFJSViewer.EventBus
   ) {
     if (pdfViewerService) {
       throw new Error('Instance of this service already exist');
@@ -99,6 +81,8 @@ export class PdfViewerService  {
         this.pdfViewer.currentScale = this._resource.zoom()
       }
     });
+
+
   }
   /*
   To Open link in PDF
@@ -109,13 +93,7 @@ export class PdfViewerService  {
   initializeServices() {
     if (this.isServiceInitialized) return;
     this.isServiceInitialized = true;
-    this.eventBus = createEventBus(PDFJSViewer, this.destroy$);
-    /* fromEvent<CustomEvent>(this.eventBus, 'pagesinit')
-      .pipe(takeUntilDestroyed(this.destroy$))
-      .subscribe((event) => {
-        console.log('CUSTOM EVENT pagesinit', event);
-        this.pageInit_.next(event);
-      }); */
+    this.eventBus = createEventBus(PDFJSViewer, this.destroy$,this._resource);
   }
 
   loadPdf(
@@ -137,6 +115,7 @@ export class PdfViewerService  {
           this._afterLoadComplete.set(pdf);
           this.resetPdfDocument();
           this.update(canvas);
+          this._resource.setTotalPage(pdf.numPages)
         },
         error: (error) => {},
       });
@@ -144,12 +123,9 @@ export class PdfViewerService  {
   }
 
   private update(canvas: ElementRef<HTMLDivElement>) {
-    this.page = this._page;
     this.render(canvas);
   }
   private render(canvas: ElementRef<HTMLDivElement>) {
-    this._page = this.getValidPageNumber(this._page);
-
     if (
       this._resource.rotation() !== 0 ||
       this.pdfViewer.pagesRotation !== this._resource.rotation()
@@ -162,7 +138,7 @@ export class PdfViewerService  {
 
     if (this._resource.stickToPage()) {
       setTimeout(() => {
-        this.pdfViewer.currentPageNumber = this._page;
+        this.pdfViewer.currentPageNumber = this._resource.page();
       });
     }
 
@@ -193,8 +169,6 @@ export class PdfViewerService  {
             }).width * PdfViewerService.CSS_UNITS;
           let scale = this._resource.zoom();
           let stickToPage = true;
-
-          console.log('viewPort', viewportWidth);
           // Scale the document when it shouldn't be in original size or doesn't fit into the viewport
           if (
             !this._resource.originalSize() ||
@@ -224,7 +198,7 @@ export class PdfViewerService  {
   private setLoadingProgress(): void {
     this._loadingTask.onProgress = (progressData: PDFProgressData) => {
       //console.log("progressData",progressData)
-      this._resource.updateProgress(progressData.loaded,progressData.total)
+      this._resource.updateProgress(progressData.loaded.toString(),progressData.total.toString())
       if (progressData.loaded === progressData.total) {
         this._resource.completeLoading()
 
@@ -279,7 +253,7 @@ export class PdfViewerService  {
     this.initPDFServices();
     this.pdfViewer = new PDFJSViewer.PDFViewer(this.getPDFOptions(canvas));
     this.pdfLinkService.setViewer(this.pdfViewer);
-    this.pdfViewer._currentPageNumber = this._page;
+    this.pdfViewer._currentPageNumber = this._resource.page();
   }
 
   private initPDFServices() {
