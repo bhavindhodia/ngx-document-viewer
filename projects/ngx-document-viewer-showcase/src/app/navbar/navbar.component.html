@@ -22,7 +22,7 @@
     <ng-template #start>
       <div class="flex gap-2">
         <p-button (onClick)="prevNavigation.emit($event)" icon="pi pi-angle-double-left"/>
-          <p-inputnumber [ngModel]="page" (ngModelChange)="onPageChange($event)"  [min]="0" size="small" [showButtons]="true" buttonLayout="horizontal"
+          <p-inputnumber [ngModel]="page" (ngModelChange)="onPageChange($event)"  [min]="1" [max]="totalPage" size="small" [showButtons]="true" buttonLayout="horizontal"
                          [inputStyle]="{ width: '3rem' }" (change)="onPageChange($event)">
           </p-inputnumber>
       </div>

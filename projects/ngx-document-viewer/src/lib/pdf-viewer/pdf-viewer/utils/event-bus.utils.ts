@@ -54,7 +54,6 @@ function attachDOMEventsToEventBus(
   fromEvent(eventBus, 'pagesinit')
     .pipe(takeUntilDestroyed(destroy$))
     .subscribe(({ source }: any) => {
-      /* console.log('pagesinit', source); */
       source.container.dispatchEvent(new CustomEvent('pagesinit', {}));
     });
 
@@ -71,6 +70,8 @@ function attachDOMEventsToEventBus(
     .pipe(takeUntilDestroyed(destroy$))
     .subscribe(({ scale, presetValue, source }: any) => {
       const event = document.createEvent('UIEvents') as any;
+      console.log('scalechange', scale);
+
       event.initEvent('scalechange', true, true);
       //tslint:disable:no-string-literal
       event['scale'] = scale;

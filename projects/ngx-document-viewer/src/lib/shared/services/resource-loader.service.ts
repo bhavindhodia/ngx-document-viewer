@@ -1,4 +1,4 @@
-import {computed, Injectable, signal} from '@angular/core';
+import {computed, ElementRef, Injectable, signal} from '@angular/core';
 import {LoadingProgress, LoadingProgressStatus, ZoomScale} from '../../pdf-viewer/pdf-viewer/utils/typings';
 import {BehaviorSubject, distinctUntilChanged, Observable} from 'rxjs';
 import {TypedArray} from 'pdfjs-dist/types/src/display/api';
@@ -19,6 +19,7 @@ export class ResourceLoaderService {
   private _showBorders = signal<boolean>(true);
   private _page = signal<number>(1);
   private _totalPage = signal<number>(1);
+  private _canvas = signal<ElementRef<HTMLCanvasElement>|null>(null);
 
   restResource(){
     console.log('RESET RESOURCE');
@@ -27,7 +28,6 @@ export class ResourceLoaderService {
     this.setRotation(0)
     this.setZoomScale('page-width')
     this.setPage(1)
-    //this.setTotalPage(1)
   }
 
   progressInitialValue: LoadingProgress = {
@@ -149,12 +149,17 @@ export class ResourceLoaderService {
   }
   readonly page = computed<number>(() => this._page())
   setPage(value: number) {
-    if(value <= this.totalPage()){
+    if(value > 0 && value <= this.totalPage()){
       this._page.set(value);
     }
   }
   readonly totalPage = computed<number>(() => this._totalPage())
   setTotalPage(value: number) {
     this._totalPage.set(value);
+  }
+
+  readonly canvas = computed<ElementRef<HTMLCanvasElement>|null>(() => this._canvas())
+  setCanvas(value: ElementRef<HTMLCanvasElement>) {
+    this._canvas.set(value);
   }
 }

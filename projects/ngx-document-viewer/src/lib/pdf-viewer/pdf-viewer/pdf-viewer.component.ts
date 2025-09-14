@@ -63,6 +63,7 @@ export class PdfViewerComponent implements  OnDestroy,AfterViewInit,OnChanges {
     ) {
       pdfWorkerSrc = (window as any).pdfWorkerSrc;
     } else {
+      console.log("pdfJsVersion",pdfJsVersion)
       pdfWorkerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfJsVersion}/legacy/build/pdf.worker.min.mjs`;
     }
 
@@ -95,11 +96,11 @@ export class PdfViewerComponent implements  OnDestroy,AfterViewInit,OnChanges {
 
   }
   private loadPDF(src:string | TypedArray) {
-    //console.log('PdfViewerComponent loadPDF',this.src());
     this.pdfViewerService.loadPdf(
       src,
       this.host
     );
+
   }
 
   private setupResizeListener(): void {

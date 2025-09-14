@@ -26,6 +26,7 @@ import {
   PDFProgressData,
   RenderTextMode
 } from '../utils/typings';
+import {Canvas, Rect} from 'fabric';
 
 @Injectable({
   providedIn: 'root',
@@ -66,6 +67,7 @@ export class PdfViewerService  {
   get pdfDocument() {
     return this._pdf;
   }
+  fabricCanvases: Canvas[] = [];
 
   constructor(
     @Optional() @SkipSelf() pdfViewerService: PdfViewerService
@@ -110,12 +112,16 @@ export class PdfViewerService  {
     from(this._loadingTask!.promise as Promise<PDFDocumentProxy>)
       .pipe(takeUntilDestroyed(this.destroy$))
       .subscribe({
-        next: (pdf: PDFDocumentProxy) => {
+        next: async (pdf: PDFDocumentProxy) => {
           this._pdf = pdf;
           this._afterLoadComplete.set(pdf);
           this.resetPdfDocument();
           this.update(canvas);
           this._resource.setTotalPage(pdf.numPages)
+          //this._resource.setCanvas(canvas)
+          for (let pageNum = 1; pageNum <= this._pdf.numPages; pageNum++) {
+            await this.renderPage(canvas.nativeElement, pageNum);
+          }
         },
         error: (error) => {},
       });
@@ -137,9 +143,9 @@ export class PdfViewerService  {
     }
 
     if (this._resource.stickToPage()) {
-      setTimeout(() => {
+      //setTimeout(() => {
         this.pdfViewer.currentPageNumber = this._resource.page();
-      });
+      //});
     }
 
     if (!this.pdfViewer._pages?.length) {
@@ -161,6 +167,7 @@ export class PdfViewerService  {
       .pipe(takeUntilDestroyed(this.destroy$))
       .subscribe({
         next: (page: PDFPageProxy) => {
+
           const rotation = this._resource.rotation() + page.rotate;
           const viewportWidth =
             page.getViewport({
@@ -177,7 +184,6 @@ export class PdfViewerService  {
                 canvas.nativeElement.querySelector('div')!.clientWidth)
           ) {
             const viewPort = page.getViewport({ scale: 1, rotation });
-
             scale = this.getScale(
               canvas.nativeElement.querySelector('div')!,
               viewPort.width,
@@ -210,6 +216,7 @@ export class PdfViewerService  {
     viewportWidth: number,
     viewportHeight: number
   ) {
+    console.log("SCALE")
     const borderSize = this._resource.showBorders()
       ? 2 * PdfViewerService.BORDER_WIDTH
       : 0;
@@ -311,5 +318,45 @@ export class PdfViewerService  {
     this.pdfViewer && this.pdfViewer.setDocument(null as any);
     this.pdfLinkService && this.pdfLinkService.setDocument(null, null);
     this.pdfFindController && this.pdfFindController.setDocument(null as any);
+  }
+
+  public changeToPage(pageNumber:number){
+    this._resource.setPage(pageNumber)
+    this.pdfViewer.scrollPageIntoView({ pageNumber: this._resource.page() });
+  }
+
+  async renderPage(container:HTMLDivElement,pageNum: number) {
+    if (this._pdf instanceof PDFDocumentProxy) {
+      const page = await this._pdf.getPage(pageNum);
+
+
+    const viewport = page.getViewport({ scale: 1.5 });
+    const canvas = document.createElement('canvas');
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
+
+    container.appendChild(canvas);
+
+    const context = canvas.getContext('2d')!;
+    await page.render({ canvasContext: context, viewport }).promise;
+
+    // Initialize fabric on this canvas
+    const fabricCanvas = new Canvas(canvas);
+    this.fabricCanvases.push(fabricCanvas);
+
+    // Example: Add rectangle on click
+    fabricCanvas.on('mouse:down', (options) => {
+      const rect = new Rect({
+        left: options.pointer!.x,
+        top: options.pointer!.y,
+        width: 100,
+        height: 60,
+        fill: 'rgba(255,0,0,0.3)',
+        stroke: 'red',
+        strokeWidth: 2
+      });
+      fabricCanvas.add(rect);
+    });
+  }
   }
 }

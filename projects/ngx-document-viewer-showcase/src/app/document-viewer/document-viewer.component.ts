@@ -11,7 +11,6 @@ import {
   ToolbarService,
 } from '@ngx-document-viewer';
 import { AsyncPipe, JsonPipe } from '@angular/common';
-import { PdfViewerService } from '@ngx-document-viewer';
 import { ButtonModule } from 'primeng/button';
 
 @Component({
@@ -28,7 +27,6 @@ import { ButtonModule } from 'primeng/button';
   styleUrl: './document-viewer.component.scss',
 })
 export class DocumentViewerComponent implements OnInit, AfterViewInit {
-  private _toolbarService = inject(ToolbarService);
   resourceLoader = inject(ResourceLoaderService);
   documentUrl = signal<string>('');
   getServiceStatus$ = this.resourceLoader.loadingProgress$;
@@ -53,7 +51,6 @@ export class DocumentViewerComponent implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit(): void {
-    //this.getServiceStatus$ = this._toolbarService.getEditPen();
   }
   navigate(value: number = 0) {
     if (this.currentIndex === 0 && value === -1) {

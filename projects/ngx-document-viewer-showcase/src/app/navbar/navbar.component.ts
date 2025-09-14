@@ -9,7 +9,7 @@ import {
   Output
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ResourceLoaderService } from '@ngx-document-viewer';
+import {PdfViewerService, ResourceLoaderService} from '@ngx-document-viewer';
 import { MenuItem, MenuItemCommandEvent } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { InputGroupModule } from 'primeng/inputgroup';
@@ -39,25 +39,25 @@ export class NavbarComponent implements OnInit {
   @Output() prevNavigation = new EventEmitter();
   @Output() nextNavigation = new EventEmitter();
   resourceLoaderService = inject(ResourceLoaderService);
+  pdfViewerService = inject(PdfViewerService);
   items: MenuItem[] | undefined;
   private static readonly ZOOM_IN = 1.1;
   private static readonly ZOOM_OUT = 0.9;
   private static readonly ROTATION = 90;
   destroy$ = inject(DestroyRef);
   rows2: number = 10;
-  onPageChange2(event: PaginatorState) {
-    //this.paginator = event.first ?? 0;
-    this.rows2 = event.rows ?? 10;
-  }
 
   get page(): number {
     return this.resourceLoaderService.page();
   }
-
+  get totalPage(): number {
+    return this.resourceLoaderService.totalPage();
+  }
   constructor() {}
 
   onPageChange(event: any) {
     console.log('EVENT', event);
+    this.pdfViewerService.changeToPage(event)
   }
 
   ngOnInit() {
